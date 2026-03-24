@@ -60,7 +60,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:1.75rem}
 .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:1.75rem}
 .g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:1.75rem}
-.g3r{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:1.75rem}
 .kpi{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:1.25rem 1.4rem;position:relative;overflow:hidden;transition:border-color .15s,transform .15s}
 .kpi:hover{border-color:var(--bdr2);transform:translateY(-2px)}
 .kpi-acc{position:absolute;top:0;left:0;right:0;height:3px}
@@ -143,6 +142,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .imp-table td{padding:12px 16px;border-bottom:1px solid var(--bdr);vertical-align:middle}
 .imp-table tr:last-child td{border-bottom:none}
 .imp-table tr:hover td{background:var(--surf2)}
+/* ── ANALISAR ── */
+.anal-layout{display:grid;grid-template-columns:320px 1fr;gap:1.5rem;align-items:start}
+.lead-pick-list{display:flex;flex-direction:column;gap:6px;max-height:70vh;overflow-y:auto;padding-right:4px}
+.lead-pick-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surf);border:1px solid var(--bdr);border-radius:10px;cursor:pointer;transition:all .15s}
+.lead-pick-item:hover{border-color:var(--navy);background:rgba(12,17,48,.03)}
+.lead-pick-item.selected{border-color:var(--navy);background:rgba(12,17,48,.06);box-shadow:0 0 0 2px rgba(12,17,48,.15)}
+.lead-pick-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0;background:var(--surf2);color:var(--tx2);border:1px solid var(--bdr)}
+.lead-pick-name{font-size:13px;font-weight:500;color:var(--tx)}
+.lead-pick-sub{font-size:11px;color:var(--tx3);margin-top:1px}
+.lead-pick-badge{margin-left:auto;flex-shrink:0}
+.anal-search{width:100%;padding:9px 14px;border:1px solid var(--bdr);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--tx);background:var(--surf);outline:none;margin-bottom:10px;transition:border-color .15s}
+.anal-search:focus{border-color:var(--navy)}
+.anal-right{display:flex;flex-direction:column;gap:1rem}
+.anal-empty{display:flex;align-items:center;justify-content:center;min-height:400px;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r)}
+.resp-card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:1.4rem 1.6rem}
+.resp-row{display:flex;gap:1rem;padding:10px 0;border-bottom:1px solid var(--bdr)}
+.resp-row:last-child{border-bottom:none}
+.resp-q{font-size:11px;color:var(--tx2);width:220px;flex-shrink:0;line-height:1.5;padding-top:1px}
+.resp-a{font-size:13px;font-weight:500;color:var(--tx);flex:1;line-height:1.5}
 .sg{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1rem}
 .sc{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:1.25rem 1.4rem}
 .sc-lbl{font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
@@ -178,20 +196,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .info-box{background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.3);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--tx2);margin-bottom:1rem;line-height:1.6}
 .info-box strong{color:var(--tx)}
 @media(max-width:900px){
-  .topbar{padding:0 1rem}
-  .tb-nav{display:none}
-  .hamburger{display:block}
+  .topbar{padding:0 1rem}.tb-nav{display:none}.hamburger{display:block}
   .main{padding:1.25rem 1rem}
   .g5,.pipe-grid{grid-template-columns:repeat(3,1fr)}
-  .g4,.g3,.g3r{grid-template-columns:repeat(2,1fr)}
-  .g2{grid-template-columns:1fr}
+  .g4,.g3{grid-template-columns:repeat(2,1fr)}
   .t-head,.t-row{grid-template-columns:2fr 1fr 60px}
   .th:nth-child(n+3):nth-child(-n+5),.t-row>*:nth-child(n+3):nth-child(-n+5){display:none}
   .meta-card{flex-direction:column;gap:1.25rem}
+  .anal-layout{grid-template-columns:1fr}
   .sg{grid-template-columns:1fr}
 }
 @media(max-width:560px){
-  .g4,.g3,.g3r,.g2{grid-template-columns:1fr}
+  .g4,.g3,.g2{grid-template-columns:1fr}
   .g5,.pipe-grid{grid-template-columns:repeat(2,1fr)}
   .fg2{grid-template-columns:1fr}
 }
@@ -200,13 +216,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 <body>
 
 <header class="topbar">
-  <div style="display:flex;align-items:center;gap:0">
+  <div style="display:flex;align-items:center">
     <div class="tb-brand">PPV <em>Vendas</em></div>
     <nav class="tb-nav">
       <button class="tnav active" onclick="goPage('visao',this)">Visão Geral</button>
       <button class="tnav" onclick="goPage('leads',this)">Leads <span id="nb" style="background:rgba(255,255,255,.15);padding:1px 7px;border-radius:10px;font-size:11px;margin-left:2px">0</span></button>
       <button class="tnav" onclick="goPage('importar',this)">Importar CSV</button>
-      <button class="tnav" onclick="goPage('analisar',this)">Analisar Lead</button>
+      <button class="tnav" onclick="goPage('analisar',this)">Analisar Lead <span id="nb-csv" style="display:none;background:rgba(201,168,76,.3);color:var(--gold);padding:1px 7px;border-radius:10px;font-size:11px;margin-left:2px">0</span></button>
       <button class="tnav" onclick="goPage('config',this)">Config</button>
     </nav>
   </div>
@@ -230,9 +246,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 
 <!-- VISÃO GERAL -->
 <div class="page active" id="page-visao">
-  <div class="phdr">
-    <div><div class="ptitle">Dashboard de <em>Vendas</em></div><div class="psub" id="vsub">Método PPV · carregando...</div></div>
-  </div>
+  <div class="phdr"><div><div class="ptitle">Dashboard de <em>Vendas</em></div><div class="psub" id="vsub">Método PPV · carregando...</div></div></div>
   <div class="meta-card">
     <div class="meta-left">
       <div class="meta-lbl">Faturado no mês</div>
@@ -245,16 +259,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
       <div class="meta-rest" id="mrest">—</div>
     </div>
     <div class="meta-prods">
-      <div>
-        <div class="meta-prod-lbl">Tutoria Hands-On</div>
-        <div class="meta-prod-val" id="mtv">—</div>
-        <div class="meta-prod-sub" id="mtf">—</div>
-      </div>
-      <div>
-        <div class="meta-prod-lbl">Aceleradora PPV</div>
-        <div class="meta-prod-val" id="mav">—</div>
-        <div class="meta-prod-sub" id="maf">—</div>
-      </div>
+      <div><div class="meta-prod-lbl">Tutoria Hands-On</div><div class="meta-prod-val" id="mtv">—</div><div class="meta-prod-sub" id="mtf">—</div></div>
+      <div><div class="meta-prod-lbl">Aceleradora PPV</div><div class="meta-prod-val" id="mav">—</div><div class="meta-prod-sub" id="maf">—</div></div>
     </div>
   </div>
   <div class="pipe-grid">
@@ -270,7 +276,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
     <div class="kpi"><div class="kpi-acc" style="background:var(--green)"></div><div class="kpi-lbl">Ticket médio</div><div class="kpi-val" id="ktick">—</div></div>
     <div class="kpi"><div class="kpi-acc" style="background:var(--blue)"></div><div class="kpi-lbl">Total de leads</div><div class="kpi-val" id="ktleads">—</div></div>
   </div>
-  <div class="g3r">
+  <div class="g3">
     <div class="card"><div class="card-title">Por produto</div><div id="rprod"><div class="empty" style="padding:.5rem 0;font-size:12px">—</div></div></div>
     <div class="card"><div class="card-title">Origem dos leads</div><div id="rorig"><div class="empty" style="padding:.5rem 0;font-size:12px">—</div></div></div>
     <div class="card" style="border-top:3px solid var(--gold)"><div class="card-title">Por que buscam</div><div id="rmot"><div class="empty" style="padding:.5rem 0;font-size:12px">—</div></div></div>
@@ -291,21 +297,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
     <button class="filt" onclick="setFiltro('nenhum',this)">Não qualif.</button>
   </div>
   <div class="ltable">
-    <div class="t-head">
-      <div class="th">Lead</div><div class="th">Produto</div><div class="th">Etapa</div><div class="th">Motivação</div><div class="th">Origem</div><div class="th"></div>
-    </div>
+    <div class="t-head"><div class="th">Lead</div><div class="th">Produto</div><div class="th">Etapa</div><div class="th">Motivação</div><div class="th">Origem</div><div class="th"></div></div>
     <div id="leads-body"><div class="empty"><div class="empty-icon">👤</div>Nenhum lead ainda.</div></div>
   </div>
 </div>
 
 <!-- IMPORTAR -->
 <div class="page" id="page-importar">
-  <div class="phdr"><div><div class="ptitle">Importar <em>CSV</em></div><div class="psub">Suba o arquivo do Respondi — as colunas são detectadas automaticamente</div></div></div>
-
-  <div class="info-box">
-    <strong>Detecção automática do Respondi ativa.</strong> O dashboard já conhece o formato das suas perguntas e mapeia automaticamente: nome, faturamento, o que precisa, formato preferido e disponibilidade de investimento.
-  </div>
-
+  <div class="phdr"><div><div class="ptitle">Importar <em>CSV</em></div><div class="psub">Suba o arquivo do Respondi — colunas detectadas automaticamente</div></div></div>
+  <div class="info-box"><strong>Detecção automática ativa.</strong> O dashboard reconhece o formato exato do seu Respondi e mapeia nome, faturamento, necessidade, formato preferido e disponibilidade de investimento automaticamente.</div>
   <div class="card" style="margin-bottom:1rem">
     <div class="uarea" id="uarea" onclick="document.getElementById('finput').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
       <div class="uarea-icon">📄</div>
@@ -315,7 +315,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
     <input type="file" id="finput" accept=".csv" style="display:none" onchange="handleFile(event)">
     <div id="finfo"></div>
     <div style="margin-top:1.25rem;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <button class="btn" id="bproc" onclick="processarCSV()" style="display:none">Qualificar com IA</button>
+      <button class="btn" id="bproc" onclick="processarCSV()" style="display:none">Qualificar todos</button>
       <div id="improg" style="flex:1;display:none;min-width:200px">
         <div class="prog-wrap"><div class="prog-bar" id="progbar" style="width:0%"></div></div>
         <div style="font-size:12px;color:var(--tx2)" id="proglbl">Aguardando...</div>
@@ -330,47 +330,71 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
     </div>
     <div class="card" style="padding:0;overflow:hidden">
       <div style="padding:1rem 1.6rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bdr);flex-wrap:wrap;gap:.75rem">
-        <div style="font-size:14px;font-weight:500">Resultado da qualificação</div>
+        <div style="font-size:14px;font-weight:500">Resultado — clique em "Analisar Lead" para ver detalhes individuais</div>
         <button class="btn" onclick="adicionarTodos()">Adicionar todos ao pipeline</button>
       </div>
       <div style="overflow-x:auto">
-        <table class="imp-table"><thead><tr><th>Nome</th><th>Faturamento</th><th>Formato preferido</th><th>Recomendação</th><th>Scores</th><th>Motivo</th></tr></thead><tbody id="imptbody"></tbody></table>
+        <table class="imp-table"><thead><tr><th>Nome</th><th>Faturamento</th><th>Formato preferido</th><th>Recomendação</th><th>Scores</th></tr></thead><tbody id="imptbody"></tbody></table>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ANALISAR -->
+<!-- ANALISAR LEAD -->
 <div class="page" id="page-analisar">
-  <div class="phdr"><div><div class="ptitle">Analisar <em>Lead</em></div><div class="psub">Cole as respostas do formulário e receba a qualificação com IA</div></div></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start" id="analgrid">
-    <div class="card">
-      <div class="card-title">Respostas do formulário</div>
-      <div class="field"><label>Nome do lead</label><input id="anom" type="text" placeholder="Ex: Fernanda Lima"></div>
-      <div class="field"><label>Respostas</label><textarea id="aresp" rows="8" placeholder="Cole aqui as respostas do Respondi...&#10;&#10;Ex:&#10;Faturamento: Até R$10k&#10;Hoje você precisa mais de: Estruturar vendas e aumentar conversão&#10;Formato preferido: Quero acompanhamento próximo e implementação individual&#10;Disponibilidade de investir: Sim, estou pronto para investir"></textarea></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" id="banalise" onclick="analisarLead()">Analisar com IA</button>
-        <button class="btn-out" onclick="preencherEx()">Ver exemplo</button>
+  <div class="phdr"><div><div class="ptitle">Analisar <em>Lead</em></div><div class="psub" id="anal-sub">Selecione um lead da lista para ver as respostas e analisar com IA</div></div></div>
+  <div class="anal-layout">
+    <!-- LISTA DE LEADS DO CSV -->
+    <div>
+      <input class="anal-search" type="text" id="anal-search" placeholder="Buscar lead..." oninput="renderPickList()">
+      <div id="pick-empty" style="display:none;text-align:center;padding:2rem;color:var(--tx2);font-size:13px;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r)">
+        <div style="font-size:28px;margin-bottom:8px;opacity:.3">📂</div>
+        Importe um CSV primeiro na aba<br>"Importar CSV"
       </div>
+      <div class="lead-pick-list" id="pick-list"></div>
     </div>
-    <div id="ares" style="display:none">
-      <div class="sg">
-        <div class="sc"><div class="sc-lbl">Tutoria Hands-On</div><div class="sc-num" id="st" style="color:var(--navy)">—</div><div class="sb-bg"><div class="sb-fill" id="sbt" style="background:var(--navy);width:0%"></div></div></div>
-        <div class="sc"><div class="sc-lbl">Aceleradora PPV</div><div class="sc-num" id="sa" style="color:var(--gold2)">—</div><div class="sb-bg"><div class="sb-fill" id="sba" style="background:var(--gold);width:0%"></div></div></div>
+    <!-- PAINEL DIREITO -->
+    <div class="anal-right" id="anal-right">
+      <div class="anal-empty" id="anal-placeholder">
+        <div style="text-align:center;color:var(--tx3)">
+          <div style="font-size:52px;margin-bottom:14px;opacity:.25">👈</div>
+          <div style="font-size:15px;font-weight:500;color:var(--tx2);margin-bottom:6px">Selecione um lead</div>
+          <div style="font-size:13px">Clique em um nome na lista ao lado</div>
+        </div>
       </div>
-      <div id="recbox" style="margin-bottom:1rem"></div>
-      <div class="card">
-        <div class="card-title">Análise</div>
-        <div id="pontos" style="display:flex;flex-direction:column;gap:8px;margin-bottom:1rem"></div>
-        <div class="divider"></div>
-        <div class="abord"><div class="abord-lbl">Como abordar</div><div class="abord-text" id="abordtxt"></div></div>
-        <div style="margin-top:1rem"><button class="btn" onclick="addLeadAnalisado()">Adicionar ao pipeline</button></div>
-      </div>
-    </div>
-    <div id="ares-empty" style="display:flex;align-items:center;justify-content:center;min-height:300px">
-      <div style="text-align:center;color:var(--tx3)">
-        <div style="font-size:48px;margin-bottom:12px;opacity:.3">🔍</div>
-        <div style="font-size:14px">A análise vai aparecer aqui</div>
+      <!-- RESPOSTAS DO LEAD SELECIONADO -->
+      <div id="anal-content" style="display:none">
+        <div class="resp-card" style="margin-bottom:1rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:.75rem">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div id="sel-av" style="width:42px;height:42px;border-radius:50%;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:var(--navy);border:1px solid var(--bdr)"></div>
+              <div>
+                <div id="sel-nome" style="font-size:16px;font-weight:500;color:var(--tx)"></div>
+                <div id="sel-insta" style="font-size:12px;color:var(--tx3);margin-top:2px"></div>
+              </div>
+            </div>
+            <button class="btn" id="btn-analisar-ia" onclick="analisarLeadSelecionado()">Analisar com IA</button>
+          </div>
+          <div id="sel-respostas"></div>
+        </div>
+        <!-- RESULTADO IA -->
+        <div id="ares" style="display:none">
+          <div class="sg">
+            <div class="sc"><div class="sc-lbl">Tutoria Hands-On</div><div class="sc-num" id="st" style="color:var(--navy)">—</div><div class="sb-bg"><div class="sb-fill" id="sbt" style="background:var(--navy);width:0%"></div></div></div>
+            <div class="sc"><div class="sc-lbl">Aceleradora PPV</div><div class="sc-num" id="sa" style="color:var(--gold2)">—</div><div class="sb-bg"><div class="sb-fill" id="sba" style="background:var(--gold);width:0%"></div></div></div>
+          </div>
+          <div id="recbox" style="margin-bottom:1rem"></div>
+          <div class="card">
+            <div class="card-title">Análise detalhada</div>
+            <div id="pontos" style="display:flex;flex-direction:column;gap:8px;margin-bottom:1rem"></div>
+            <div class="divider"></div>
+            <div class="abord"><div class="abord-lbl">Como abordar</div><div class="abord-text" id="abordtxt"></div></div>
+            <div style="margin-top:1rem;display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn" onclick="addLeadAnalisado()">Adicionar ao pipeline</button>
+              <button class="btn-out" onclick="proximoLead()">Próximo lead →</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -384,7 +408,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
       <div class="cfg-title">Conexão Supabase</div>
       <div class="cfg-sub">Cole as credenciais do seu projeto para ativar o banco de dados compartilhado entre você e a Lana.</div>
       <div class="field"><label>Supabase URL</label><input type="text" id="sburl" placeholder="https://xxxxxxxxxxxx.supabase.co"></div>
-      <div class="field"><label>Supabase Anon Key (Legacy anon)</label><input type="text" id="sbkey" placeholder="eyJhbGci..."></div>
+      <div class="field"><label>Supabase Anon Key</label><input type="text" id="sbkey" placeholder="eyJhbGci..."></div>
       <div style="display:flex;gap:10px;align-items:center;margin-top:1rem;flex-wrap:wrap">
         <button class="btn" onclick="salvarConfig()">Salvar e conectar</button>
         <span id="cstat" style="font-size:13px;color:var(--tx2)"></span>
@@ -396,10 +420,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
       <div class="divider"></div>
       <div style="font-size:13px;color:var(--tx2);line-height:1.9">
         <strong style="color:var(--tx);display:block;margin-bottom:6px">Como configurar:</strong>
-        1. Acesse seu projeto em <a href="https://supabase.com" target="_blank" style="color:var(--navy);font-weight:500">supabase.com</a><br>
+        1. Acesse <a href="https://supabase.com" target="_blank" style="color:var(--navy);font-weight:500">supabase.com</a><br>
         2. Vá em <strong style="color:var(--tx)">Settings → API</strong><br>
         3. Copie a <strong style="color:var(--tx)">Project URL</strong><br>
-        4. Clique em <strong style="color:var(--tx)">Legacy anon, service_role API keys</strong> e copie a chave <strong style="color:var(--tx)">anon public</strong><br>
+        4. Em <strong style="color:var(--tx)">Legacy anon keys</strong> copie a <strong style="color:var(--tx)">anon public</strong><br>
         5. Cole ao lado e clique em Salvar
       </div>
     </div>
@@ -423,96 +447,46 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
     </div>
     <div class="field"><label>Principal motivação</label><select id="fmot"><option>Não sabe o que postar</option><option>Quer escalar o faturamento</option><option>Conteúdo não converte</option><option>Não sabe se posicionar</option><option>Outro</option></select></div>
     <div class="field"><label>Valor (se fechado)</label><input id="fval" type="number" placeholder="0"></div>
-    <div class="mbtns">
-      <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
-      <button class="btn" onclick="salvarLead()">Salvar lead</button>
-    </div>
+    <div class="mbtns"><button class="btn-cancel" onclick="fecharModal()">Cancelar</button><button class="btn" onclick="salvarLead()">Salvar lead</button></div>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <script>
 const META=100000;
-const COR_M={'Não sabe o que postar':'#185FA5','Quer escalar o faturamento':'#854F0B','Conteúdo não converte':'#534AB7','Não sabe se posicionar':'#993C1D','Estruturar vendas':'#3B6D11','Gerar mais leads':'#185FA5','Escalar vendas':'#854F0B','Outro':'#5F5E5A'};
-
-// ── Mapeamento específico do Respondi da Manoela ─────────
-const RESPONDI_MAP = {
-  nome: 'Qual é o seu nome completo?',
-  faturamento: 'Qual é seu faturamento médio mensal?',
-  precisa: 'Hoje você precisa mais de:',
-  formato: 'Hoje temos dois formatos de acompanhamento.',
-  investir: 'Se fizer sentido para seu momento, você estaria disposto(a) a investir para acelerar suas vendas?',
-  vende: 'Hoje você vende principalmente através de:',
-  instagram: 'Qual é o seu Instagram?',
+const COR_M={'Não sabe o que postar':'#185FA5','Quer escalar o faturamento':'#854F0B','Conteúdo não converte':'#534AB7','Não sabe se posicionar':'#993C1D','Estruturar vendas':'#3B6D11','Outro':'#5F5E5A'};
+const RM={
+  nome:'Qual é o seu nome completo?',
+  email:'Qual é o seu melhor e-mail?',
+  whats:'Qual seu WhatsApp?',
+  insta:'Qual é o seu Instagram?',
+  fat:'Qual é seu faturamento médio mensal?',
+  vende:'Hoje você vende principalmente através de:',
+  precisa:'Hoje você precisa mais de:',
+  formato:'Hoje temos dois formatos de acompanhamento.',
+  investir:'Se fizer sentido para seu momento, você estaria disposto(a) a investir para acelerar suas vendas?',
 };
 
-function qualificarPorRegras(row) {
-  const fat = (row[RESPONDI_MAP.faturamento] || '').toLowerCase();
-  const formato = (row[RESPONDI_MAP.formato] || '').toLowerCase();
-  const precisa = (row[RESPONDI_MAP.precisa] || '').toLowerCase();
-  const investir = (row[RESPONDI_MAP.investir] || '').toLowerCase();
-
-  let scoreTut = 0, scoreAcel = 0;
-
-  // Faturamento
-  if (fat.includes('r$10k') || fat.includes('r$30k') || fat.includes('r$80k')) scoreTut += 35;
-  else if (fat.includes('até r$10k')) { scoreTut += 15; scoreAcel += 35; }
-  else if (fat.includes('ainda não')) scoreAcel += 15;
-
-  // Formato preferido
-  if (formato.includes('individual')) scoreTut += 40;
-  else if (formato.includes('grupo')) scoreAcel += 40;
-
-  // O que precisa
-  if (precisa.includes('escalar')) scoreTut += 20;
-  else if (precisa.includes('estruturar')) { scoreTut += 10; scoreAcel += 20; }
-  else if (precisa.includes('gerar mais')) scoreAcel += 15;
-
-  // Disponibilidade de investir
-  if (investir.includes('sim, estou')) { scoreTut += 5; scoreAcel += 5; }
-  else if (investir.includes('talvez')) { scoreTut += 2; scoreAcel += 2; }
-
-  const rec = scoreTut > scoreAcel ? (scoreTut >= 40 ? 'tutoria' : 'nenhum') : (scoreAcel >= 40 ? 'aceleradora' : 'nenhum');
-
-  // Motivação
-  let mot = 'Outro';
-  if (precisa.includes('escalar')) mot = 'Quer escalar o faturamento';
-  else if (precisa.includes('estruturar') || precisa.includes('conversão')) mot = 'Conteúdo não converte';
-  else if (precisa.includes('gerar')) mot = 'Não sabe o que postar';
-  else if (precisa.includes('organizar') || precisa.includes('processo')) mot = 'Não sabe se posicionar';
-
-  return {
-    score_tutoria: Math.min(scoreTut, 100),
-    score_aceleradora: Math.min(scoreAcel, 100),
-    recomendacao: rec,
-    motivo: rec === 'tutoria' ? 'Perfil individual com faturamento ativo — Tutoria Hands-On.' : rec === 'aceleradora' ? 'Busca estrutura em grupo para escalar — Aceleradora PPV.' : 'Perfil ainda não qualificado para os produtos principais.',
-    motivacao_lead: mot,
-    formato_preferido: row[RESPONDI_MAP.formato] || '—',
-  };
-}
-
-let sb=null,leads=[],filtro='todos',csvLeads=[],impRes=[],leadAnal=null;
+let sb=null,leads=[],filtro='todos',csvRows=[],impRes=[],leadAnal=null,selectedIdx=-1;
 
 function toggleDrawer(){document.getElementById('drawer').classList.toggle('open')}
 
+// ── SUPABASE ─────────────────────────────────────────────
 function loadCfg(){
   const url=localStorage.getItem('sb_url'),key=localStorage.getItem('sb_key');
   if(url&&key){document.getElementById('sburl').value=url;document.getElementById('sbkey').value=key;initSB(url,key)}
   else{setStatus(false,'Não configurado');fromLocal()}
 }
 function initSB(url,key){
-  try{
-    sb=window.supabase.createClient(url,key);
-    fetchLeads().then(()=>setStatus(true,'Conectado')).catch(()=>{setStatus(false,'Erro de conexão');fromLocal()});
-  }catch{setStatus(false,'Credenciais inválidas');fromLocal()}
+  try{sb=window.supabase.createClient(url,key);fetchLeads().then(()=>setStatus(true,'Conectado')).catch(()=>{setStatus(false,'Erro');fromLocal()})}
+  catch{setStatus(false,'Credenciais inválidas');fromLocal()}
 }
 async function fetchLeads(){
   const{data,error}=await sb.from('leads_ppv').select('*').order('criado_em',{ascending:false});
   if(error)throw error;leads=data||[];saveLocal();render();
 }
 async function insertLead(l){
-  if(!sb){leads.unshift({...l,id:Date.now().toString()+'_'+Math.random().toString(36).slice(2)});saveLocal();render();return}
+  if(!sb){leads.unshift({...l,id:Date.now()+Math.random().toString(36).slice(2)});saveLocal();render();return}
   const{data,error}=await sb.from('leads_ppv').insert([l]).select();
   if(error){leads.unshift({...l,id:Date.now().toString()});saveLocal();render();return}
   leads.unshift(data[0]);saveLocal();render();
@@ -532,10 +506,11 @@ function salvarConfig(){
 }
 function setStatus(ok,msg){
   document.getElementById('sdot').style.background=ok?'#639922':'#E24B4A';
-  document.getElementById('stxt').textContent=ok?'Conectado ao Supabase ✓':msg;
+  document.getElementById('stxt').textContent=ok?'Conectado ✓':msg;
   document.getElementById('cstat').textContent=ok?'Conectado ✓':msg;
 }
 
+// ── RENDER ───────────────────────────────────────────────
 function fmt(v){return'R$ '+Math.round(v).toLocaleString('pt-BR')}
 function render(){
   const fech=leads.filter(l=>l.etapa==='fechado');
@@ -544,7 +519,6 @@ function render(){
   const acel=fech.filter(l=>l.produto==='aceleradora');
   const tick=fech.length?fat/fech.length:0;
   const pct=Math.min(100,Math.round(fat/META*100));
-  const falta=META-fat;
   document.getElementById('nb').textContent=leads.length;
   document.getElementById('tbfat').textContent=fmt(fat)+' faturado';
   document.getElementById('vsub').textContent=`Método PPV · ${leads.length} leads · ${fech.length} vendas`;
@@ -553,7 +527,7 @@ function render(){
   document.getElementById('mpct').textContent=pct+'%';
   document.getElementById('mfill').style.width=pct+'%';
   document.getElementById('msub').textContent=fech.length+' vendas fechadas';
-  document.getElementById('mrest').textContent=falta>0?`Faltam ${fmt(falta)} para a meta`:'🎉 Meta atingida!';
+  document.getElementById('mrest').textContent=(META-fat)>0?`Faltam ${fmt(META-fat)} para a meta`:'🎉 Meta atingida!';
   document.getElementById('mtv').textContent=tut.length+' vendas';
   document.getElementById('mtf').textContent=fmt(tut.reduce((s,l)=>s+(+l.valor||0),0));
   document.getElementById('mav').textContent=acel.length+' vendas';
@@ -596,7 +570,7 @@ function renderLeads(){
     const pC=l.produto==='tutoria'?'pill-t':l.produto==='aceleradora'?'pill-a':'pill-n';
     const pL=l.produto==='tutoria'?'Tutoria':l.produto==='aceleradora'?'Aceleradora':'—';
     const eC=`e-${l.etapa||'novo'}`;
-    const eL={novo:'Novo',qualificado:'Qualificado',aplicou:'Aplicou',negociacao:'Negociação',fechado:'Fechado'}[l.etapa]||l.etapa||'Novo';
+    const eL={novo:'Novo',qualificado:'Qualificado',aplicou:'Aplicou',negociacao:'Negociação',fechado:'Fechado'}[l.etapa]||'Novo';
     const mc=COR_M[l.motivo]||'#888';
     return`<div class="t-row"><div style="display:flex;align-items:center"><div class="lav ${avC}">${ini}</div><div><div class="lname">${nome}</div><div class="lsub">${l.faturamento||'—'}</div></div></div><div><span class="pill ${pC}">${pL}</span></div><div><span class="ep ${eC}">${eL}</span></div><div>${l.motivo&&l.motivo!=='Outro'?`<span class="mchip" style="background:${mc}18;color:${mc};border:0.5px solid ${mc}50">${l.motivo}</span>`:'<span style="color:var(--tx3);font-size:12px">—</span>'}</div><div style="font-size:12px;color:var(--tx2)">${l.origem||'—'}</div><div><button class="delbtn" onclick="deleteLead('${l.id}')">✕</button></div></div>`;
   }).join('');
@@ -604,16 +578,84 @@ function renderLeads(){
 
 function setFiltro(t,el){filtro=t;document.querySelectorAll('.filt').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderLeads()}
 
+// ── PICK LIST ─────────────────────────────────────────────
+function renderPickList(){
+  const q=(document.getElementById('anal-search')?.value||'').toLowerCase();
+  const validos=csvRows.filter(r=>r[RM.nome]&&r[RM.nome].trim()&&!r[RM.nome].toLowerCase().includes('preço'));
+  const filtrados=q?validos.filter(r=>r[RM.nome].toLowerCase().includes(q)):validos;
+  const empty=document.getElementById('pick-empty');
+  const list=document.getElementById('pick-list');
+  if(!validos.length){empty.style.display='block';list.innerHTML='';return}
+  empty.style.display='none';
+  list.innerHTML=filtrados.map((r,i)=>{
+    const nome=r[RM.nome]||'Lead';
+    const ini=nome.split(' ').slice(0,2).map(n=>n[0]||'').join('').toUpperCase();
+    const fat=r[RM.fat]||'—';
+    const formato=r[RM.formato]||'';
+    const isInd=formato.toLowerCase().includes('individual');
+    const isGrp=formato.toLowerCase().includes('grupo');
+    const badge=isInd?`<span class="pill pill-t" style="font-size:10px">Tutoria</span>`:isGrp?`<span class="pill pill-a" style="font-size:10px">Aceleradora</span>`:'';
+    const realIdx=csvRows.indexOf(r);
+    return`<div class="lead-pick-item ${selectedIdx===realIdx?'selected':''}" onclick="selecionarLead(${realIdx})">
+      <div class="lead-pick-av">${ini}</div>
+      <div style="flex:1;min-width:0">
+        <div class="lead-pick-name">${nome}</div>
+        <div class="lead-pick-sub">${fat}</div>
+      </div>
+      <div class="lead-pick-badge">${badge}</div>
+    </div>`;
+  }).join('');
+}
+
+function selecionarLead(idx){
+  selectedIdx=idx;
+  const row=csvRows[idx];
+  if(!row)return;
+  renderPickList();
+  leadAnal=null;
+  document.getElementById('ares').style.display='none';
+  document.getElementById('anal-placeholder').style.display='none';
+  document.getElementById('anal-content').style.display='block';
+  const nome=row[RM.nome]||'Lead';
+  const ini=nome.split(' ').slice(0,2).map(n=>n[0]||'').join('').toUpperCase();
+  document.getElementById('sel-av').textContent=ini;
+  document.getElementById('sel-nome').textContent=nome;
+  document.getElementById('sel-insta').textContent=row[RM.insta]||row[RM.email]||'';
+  const campos=[
+    {q:'Faturamento médio mensal',v:row[RM.fat]},
+    {q:'Vende principalmente através de',v:row[RM.vende]},
+    {q:'Precisa mais de',v:row[RM.precisa]},
+    {q:'Formato preferido',v:row[RM.formato]},
+    {q:'Disponibilidade de investir',v:row[RM.investir]},
+  ].filter(c=>c.v&&c.v.trim());
+  document.getElementById('sel-respostas').innerHTML=campos.map(c=>`
+    <div class="resp-row">
+      <div class="resp-q">${c.q}</div>
+      <div class="resp-a">${c.v}</div>
+    </div>`).join('');
+  document.getElementById('btn-analisar-ia').innerHTML='Analisar com IA';
+  document.getElementById('btn-analisar-ia').disabled=false;
+}
+
+function proximoLead(){
+  const validos=csvRows.map((r,i)=>({r,i})).filter(({r})=>r[RM.nome]&&!r[RM.nome].toLowerCase().includes('preço'));
+  const cur=validos.findIndex(({i})=>i===selectedIdx);
+  const next=validos[cur+1];
+  if(next)selecionarLead(next.i);
+  else toast('Você chegou ao último lead!');
+}
+
+// ── NAV ──────────────────────────────────────────────────
 function goPage(id,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tnav').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if(el)el.classList.add('active');
-  // sync drawer
-  const labels={visao:'Visão',leads:'Leads',importar:'Import',analisar:'Analis',config:'Config'};
-  document.querySelectorAll('.tnav').forEach(b=>{if(b.textContent.trim().startsWith(labels[id]))b.classList.add('active')});
+  const lbl={visao:'Visão',leads:'Leads',importar:'Import',analisar:'Analis',config:'Config'};
+  document.querySelectorAll('.tnav').forEach(b=>{if(b.textContent.trim().startsWith(lbl[id]))b.classList.add('active')});
 }
 
+// ── MODAL ─────────────────────────────────────────────────
 function abrirModal(){document.getElementById('modal').classList.add('open')}
 function fecharModal(){document.getElementById('modal').classList.remove('open')}
 document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModal()});
@@ -625,21 +667,18 @@ async function salvarLead(){
   await insertLead(l);toast('Lead salvo!');
 }
 
-// ── CSV com detecção automática do Respondi ──────────────
+// ── CSV ───────────────────────────────────────────────────
 function parseCSV(txt){
-  const lines=txt.trim().split(/\r?\n/);if(lines.length<2)return[];
+  const lines=txt.trim().split(/\r?\n/);if(lines.length<2)return{headers:[],rows:[]};
   const headers=lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim());
-  return{headers,rows:lines.slice(1).map(line=>{
+  const rows=lines.slice(1).map(line=>{
     const vals=[];let cur='',inQ=false;
-    for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){inQ=!inQ}else if(c===','&&!inQ){vals.push(cur.trim());cur=''}else{cur+=c}}
+    for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){inQ=!inQ}else if(c===','&&!inQ){vals.push(cur.trim());cur=''}else cur+=c}
     vals.push(cur.trim());
     const o={};headers.forEach((h,i)=>{o[h]=(vals[i]||'').replace(/^"|"$/g,'').trim()});
     return o;
-  }).filter(r=>Object.values(r).some(v=>v))};
-}
-
-function isRespondiFormat(headers){
-  return headers.some(h=>h.includes('nome completo')) || headers.some(h=>h.includes('faturamento médio'));
+  }).filter(r=>Object.values(r).some(v=>v));
+  return{headers,rows};
 }
 
 function handleDrop(e){e.preventDefault();document.getElementById('uarea').classList.remove('drag');const f=e.dataTransfer.files[0];if(f)processFile(f)}
@@ -648,36 +687,56 @@ function handleFile(e){if(e.target.files[0])processFile(e.target.files[0])}
 function processFile(file){
   const r=new FileReader();
   r.onload=e=>{
-    const parsed=parseCSV(e.target.result);
-    if(!parsed.rows||!parsed.rows.length){toast('CSV vazio ou inválido','err');return}
-    csvLeads=parsed.rows;
-    const isRespondi=isRespondiFormat(parsed.headers);
-    document.getElementById('finfo').innerHTML=`<div class="fbox"><span style="font-size:18px">📄</span><div style="flex:1"><div style="font-size:13px;font-weight:500">${file.name}</div><div style="font-size:11px;color:var(--tx2);margin-top:2px">${csvLeads.length} respostas ${isRespondi?'· <strong style="color:var(--green)">Formato Respondi detectado ✓</strong>':''}</div></div></div>`;
+    const{rows}=parseCSV(e.target.result);
+    if(!rows.length){toast('CSV vazio ou inválido','err');return}
+    csvRows=rows;
+    const validos=rows.filter(r=>r[RM.nome]&&r[RM.nome].trim()&&!r[RM.nome].toLowerCase().includes('preço'));
+    document.getElementById('finfo').innerHTML=`<div class="fbox"><span style="font-size:18px">📄</span><div style="flex:1"><div style="font-size:13px;font-weight:500">${file.name}</div><div style="font-size:11px;color:var(--tx2);margin-top:2px">${validos.length} leads válidos · <strong style="color:var(--green)">Formato Respondi detectado ✓</strong></div></div></div>`;
     document.getElementById('bproc').style.display='inline-flex';
+    // Atualiza badge e pick list
+    const nbCsv=document.getElementById('nb-csv');
+    nbCsv.textContent=validos.length;nbCsv.style.display='inline';
+    renderPickList();
   };
   r.readAsText(file,'UTF-8');
 }
 
+function qualificarRegras(row){
+  const fat=(row[RM.fat]||'').toLowerCase();
+  const fmt=(row[RM.formato]||'').toLowerCase();
+  const prec=(row[RM.precisa]||'').toLowerCase();
+  const inv=(row[RM.investir]||'').toLowerCase();
+  let st=0,sa=0;
+  if(fat.includes('r$10k')||fat.includes('r$30k')||fat.includes('r$80k'))st+=35;
+  else if(fat.includes('até r$10k')){st+=15;sa+=35}
+  else if(fat.includes('ainda não'))sa+=15;
+  if(fmt.includes('individual'))st+=40;
+  else if(fmt.includes('grupo'))sa+=40;
+  if(prec.includes('escalar'))st+=20;
+  else if(prec.includes('estruturar')){st+=10;sa+=20}
+  else if(prec.includes('gerar'))sa+=15;
+  if(inv.includes('sim'))st+=5,sa+=5;
+  const rec=st>sa?(st>=40?'tutoria':'nenhum'):(sa>=40?'aceleradora':'nenhum');
+  let mot='Outro';
+  if(prec.includes('escalar'))mot='Quer escalar o faturamento';
+  else if(prec.includes('estruturar')||prec.includes('conversão'))mot='Conteúdo não converte';
+  else if(prec.includes('gerar'))mot='Não sabe o que postar';
+  else if(prec.includes('organizar')||prec.includes('processo'))mot='Não sabe se posicionar';
+  return{score_tutoria:Math.min(st,100),score_aceleradora:Math.min(sa,100),recomendacao:rec,motivacao_lead:mot};
+}
+
 async function processarCSV(){
-  if(!csvLeads.length)return;
+  if(!csvRows.length)return;
   const btn=document.getElementById('bproc');btn.disabled=true;btn.innerHTML='<span class="ldots"><span></span><span></span><span></span></span>';
   document.getElementById('improg').style.display='block';document.getElementById('impres').style.display='none';
   impRes=[];
-  const total=csvLeads.length;
-  for(let i=0;i<total;i++){
-    const row=csvLeads[i];
-    document.getElementById('proglbl').textContent=`Qualificando ${i+1} de ${total}: ${row[RESPONDI_MAP.nome]||'Lead '+(i+1)}`;
-    document.getElementById('progbar').style.width=Math.round(i/total*100)+'%';
-    const nome=row[RESPONDI_MAP.nome]||'';
-    if(!nome||nome.toLowerCase().includes('preço')||nome.toLowerCase().includes('price')){continue}
-    const result=qualificarPorRegras(row);
-    impRes.push({
-      nome,
-      faturamento:row[RESPONDI_MAP.faturamento]||'—',
-      instagram:row[RESPONDI_MAP.instagram]||'—',
-      formato:row[RESPONDI_MAP.formato]||'—',
-      ...result
-    });
+  const validos=csvRows.filter(r=>r[RM.nome]&&r[RM.nome].trim()&&!r[RM.nome].toLowerCase().includes('preço'));
+  for(let i=0;i<validos.length;i++){
+    const row=validos[i];
+    document.getElementById('proglbl').textContent=`Qualificando ${i+1} de ${validos.length}: ${row[RM.nome]}`;
+    document.getElementById('progbar').style.width=Math.round(i/validos.length*100)+'%';
+    const r=qualificarRegras(row);
+    impRes.push({nome:row[RM.nome],faturamento:row[RM.fat]||'—',instagram:row[RM.insta]||'—',formato:row[RM.formato]||'—',...r});
   }
   document.getElementById('progbar').style.width='100%';
   document.getElementById('proglbl').textContent=`Concluído — ${impRes.length} leads qualificados`;
@@ -688,40 +747,34 @@ async function processarCSV(){
   document.getElementById('imptbody').innerHTML=impRes.map(r=>{
     const pC=r.recomendacao==='tutoria'?'pill-t':r.recomendacao==='aceleradora'?'pill-a':'pill-n';
     const pL=r.recomendacao==='tutoria'?'Tutoria':r.recomendacao==='aceleradora'?'Aceleradora':'—';
-    return`<tr><td><strong>${r.nome}</strong><br><span style="font-size:11px;color:var(--tx2)">${r.instagram}</span></td><td style="color:var(--tx2)">${r.faturamento}</td><td style="font-size:12px;color:var(--tx2)">${r.formato}</td><td><span class="pill ${pC}">${pL}</span></td><td style="font-size:11px;color:var(--tx2)"><span style="color:var(--navy);font-weight:500">T ${r.score_tutoria}%</span> · <span style="color:var(--gold2);font-weight:500">A ${r.score_aceleradora}%</span></td><td style="font-size:12px;color:var(--tx2)">${r.motivo}</td></tr>`;
+    return`<tr><td><strong>${r.nome}</strong><br><span style="font-size:11px;color:var(--tx2)">${r.instagram}</span></td><td style="color:var(--tx2)">${r.faturamento}</td><td style="font-size:12px;color:var(--tx2)">${r.formato}</td><td><span class="pill ${pC}">${pL}</span></td><td style="font-size:11px"><span style="color:var(--navy);font-weight:500">T ${r.score_tutoria}%</span> · <span style="color:var(--gold2);font-weight:500">A ${r.score_aceleradora}%</span></td></tr>`;
   }).join('');
   document.getElementById('impres').style.display='block';
-  btn.disabled=false;btn.innerHTML='Qualificar com IA';
+  btn.disabled=false;btn.innerHTML='Qualificar todos';
+  renderPickList();
 }
 
 async function adicionarTodos(){
-  let count=0;
-  for(const r of impRes){
-    await insertLead({nome:r.nome,faturamento:r.faturamento,origem:'Respondi',etapa:'novo',produto:r.recomendacao,motivo:r.motivacao_lead||'Outro',valor:0});
-    count++;
-  }
-  toast(`${count} leads adicionados ao pipeline!`);
-  goPage('leads',null);
+  for(const r of impRes)await insertLead({nome:r.nome,faturamento:r.faturamento,origem:'Respondi',etapa:'novo',produto:r.recomendacao,motivo:r.motivacao_lead||'Outro',valor:0});
+  toast(`${impRes.length} leads adicionados!`);goPage('leads',null);
 }
 
-// ── ANALISAR ─────────────────────────────────────────────
-function preencherEx(){
-  document.getElementById('anom').value='Fernanda Lima';
-  document.getElementById('aresp').value='Faturamento médio mensal: Até R$10k\nHoje você precisa mais de: Estruturar vendas e aumentar conversão\nFormato preferido: Quero acompanhamento próximo e implementação individual\nDisponibilidade de investir: Sim, estou pronto para investir';
-}
-
-async function analisarLead(){
-  const resp=document.getElementById('aresp').value.trim();
-  if(!resp){toast('Cole as respostas','err');return}
-  const btn=document.getElementById('banalise');btn.disabled=true;btn.innerHTML='<span class="ldots"><span></span><span></span><span></span></span>';
-  document.getElementById('ares').style.display='none';document.getElementById('ares-empty').style.display='flex';
-  const prompt=`Você é consultora de vendas da Manoela Flores, Método PPV.\n\nTUTORIA HANDS-ON (alto ticket, individual): ideal para quem já fatura algo, tem produto definido, quer atenção individual e resultado rápido. Indicadores: escolhe "acompanhamento individual", fatura R$10k+, quer escalar.\n\nACELERADORA PPV (grupo, método): ideal para quem fatura até R$10k, busca estrutura e comunidade. Indicadores: escolhe "mentoria em grupo", quer estruturar vendas.\n\nRESPOSTAS DO FORMULÁRIO:\n${resp}\n\nResponda APENAS JSON sem markdown:\n{"score_tutoria":0-100,"score_aceleradora":0-100,"recomendacao":"tutoria"ou"aceleradora"ou"nenhum","titulo":"frase curta sobre o lead","motivo":"1 frase explicando","pontos_positivos":["...","..."],"pontos_atencao":["..."],"abordagem":"mensagem sugerida de primeiro contato no WhatsApp, tom humano e direto","motivacao_lead":"Não sabe o que postar"ou"Quer escalar o faturamento"ou"Conteúdo não converte"ou"Não sabe se posicionar"ou"Outro"}`;
+// ── ANALISAR COM IA ───────────────────────────────────────
+async function analisarLeadSelecionado(){
+  const row=csvRows[selectedIdx];if(!row)return;
+  const btn=document.getElementById('btn-analisar-ia');
+  btn.disabled=true;btn.innerHTML='<span class="ldots"><span></span><span></span><span></span></span>';
+  document.getElementById('ares').style.display='none';
+  const respostas=Object.entries(RM).filter(([k])=>k!=='nome'&&k!=='email'&&k!=='whats'&&k!=='insta').map(([k,q])=>row[q]?`${q}: ${row[q]}`:'').filter(Boolean).join('\n');
+  const prompt=`Você é consultora de vendas da Manoela Flores, Método PPV.\n\nTUTORIA HANDS-ON (individual, alto ticket): fatura R$10k+, escolhe acompanhamento individual, quer escalar.\nACELERADORA PPV (grupo, método): fatura até R$10k, escolhe mentoria em grupo, quer estruturar vendas.\n\nRESPOSTAS DO FORMULÁRIO:\n${respostas}\n\nResponda APENAS JSON sem markdown:\n{"score_tutoria":0-100,"score_aceleradora":0-100,"recomendacao":"tutoria"ou"aceleradora"ou"nenhum","titulo":"frase curta sobre o lead","motivo":"1 frase explicando a recomendação","pontos_positivos":["...","..."],"pontos_atencao":["..."],"abordagem":"mensagem sugerida de primeiro contato no WhatsApp, tom humano e direto como a Manoela fala","motivacao_lead":"Não sabe o que postar"ou"Quer escalar o faturamento"ou"Conteúdo não converte"ou"Não sabe se posicionar"ou"Outro"}`;
   try{
     const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:700,messages:[{role:"user",content:prompt}]})});
     const d=await res.json();
     const r=JSON.parse(d.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim());
-    leadAnal={nome:document.getElementById('anom').value||'Lead',faturamento:'—',origem:'Formulário',etapa:'novo',produto:r.recomendacao,motivo:r.motivacao_lead||'Outro',valor:0};
-    document.getElementById('st').textContent=r.score_tutoria+'%';document.getElementById('sa').textContent=r.score_aceleradora+'%';
+    const nome=row[RM.nome]||'Lead';
+    leadAnal={nome,faturamento:row[RM.fat]||'—',origem:'Respondi',etapa:'novo',produto:r.recomendacao,motivo:r.motivacao_lead||'Outro',valor:0};
+    document.getElementById('st').textContent=r.score_tutoria+'%';
+    document.getElementById('sa').textContent=r.score_aceleradora+'%';
     setTimeout(()=>{document.getElementById('sbt').style.width=r.score_tutoria+'%';document.getElementById('sba').style.width=r.score_aceleradora+'%'},100);
     const rC=r.recomendacao==='tutoria'?'rec-t':r.recomendacao==='aceleradora'?'rec-a':'rec-n';
     const rL=r.recomendacao==='tutoria'?'Tutoria Hands-On':r.recomendacao==='aceleradora'?'Aceleradora PPV':'Não qualificado agora';
@@ -729,11 +782,17 @@ async function analisarLead(){
     document.getElementById('recbox').innerHTML=`<div class="rec-box ${rC}"><div class="rec-tag" style="${rTC}">${rL}</div><div class="rec-title">${r.titulo}</div><div class="rec-reason">${r.motivo}</div></div>`;
     document.getElementById('pontos').innerHTML=[...(r.pontos_positivos||[]).map(p=>`<div style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><div style="width:6px;height:6px;border-radius:50%;background:var(--green);margin-top:5px;flex-shrink:0"></div><span>${p}</span></div>`),(r.pontos_atencao||[]).map(p=>`<div style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><div style="width:6px;height:6px;border-radius:50%;background:var(--amber);margin-top:5px;flex-shrink:0"></div><span>${p}</span></div>`)].flat().join('');
     document.getElementById('abordtxt').textContent=r.abordagem;
-    document.getElementById('ares-empty').style.display='none';document.getElementById('ares').style.display='block';
-  }catch(e){toast('Erro ao analisar. Tente novamente.','err');console.error(e)}
+    document.getElementById('ares').style.display='block';
+  }catch(e){toast('Erro ao analisar.','err');console.error(e)}
   btn.disabled=false;btn.innerHTML='Analisar com IA';
 }
-async function addLeadAnalisado(){if(!leadAnal)return;await insertLead(leadAnal);toast('Lead adicionado!');goPage('leads',null)}
+
+async function addLeadAnalisado(){
+  if(!leadAnal)return;
+  await insertLead(leadAnal);
+  toast('Lead adicionado ao pipeline!');
+  proximoLead();
+}
 
 function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(type==='err'?' err':'');setTimeout(()=>t.classList.remove('show'),3000)}
 
