@@ -287,7 +287,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 <div class="page" id="page-leads">
   <div class="phdr">
     <div><div class="ptitle">Leads</div><div class="psub" id="lsub">0 leads cadastrados</div></div>
-    <button class="btn" onclick="abrirModal()">+ Novo lead</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-out" style="color:var(--red);border-color:rgba(163,45,45,.3)" onclick="apagarTodos()">🗑 Apagar todos</button>
+      <button class="btn" onclick="abrirModal()">+ Novo lead</button>
+    </div>
   </div>
   <div class="leads-tb">
     <input class="search" type="text" placeholder="Buscar por nome..." id="search" oninput="renderLeads()">
@@ -394,6 +397,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
               <button class="btn-out" onclick="proximoLead()">Próximo lead →</button>
             </div>
           </div>
+          <!-- OBJEÇÕES -->
+          <div id="objecoes-section" style="display:none;margin-top:1rem">
+            <div class="card">
+              <div class="card-title" style="color:var(--red)">Quebras de objeção</div>
+              <div id="objecoes-body"></div>
+            </div>
+          </div>
+          <!-- GATILHOS -->
+          <div id="gatilhos-section" style="display:none;margin-top:1rem">
+            <div class="card" style="border-top:3px solid var(--gold)">
+              <div class="card-title">Gatilhos para usar</div>
+              <div id="gatilhos-body"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -405,7 +422,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
   <div class="phdr"><div><div class="ptitle">Configurações</div><div class="psub">Conecte o Supabase para salvar dados na nuvem</div></div></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
     <div class="cfg-card">
-      <div class="cfg-title">Conexão Supabase</div>
+      <div class="cfg-title">API Key do Claude <span style="background:#eaf3de;color:#27500A;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500;margin-left:6px">necessária para a IA funcionar</span></div>
+      <div class="cfg-sub">Acesse <a href="https://console.anthropic.com" target="_blank" style="color:var(--navy);font-weight:500">console.anthropic.com</a> → API Keys → Create Key. Cole aqui para ativar o analisador de leads.</div>
+      <div class="field"><label>Anthropic API Key</label><input type="password" id="claude-key" placeholder="sk-ant-..."></div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:.75rem;flex-wrap:wrap">
+        <button class="btn" onclick="salvarClaudeKey()">Salvar API Key</button>
+        <span id="claude-stat" style="font-size:13px;color:var(--tx2)"></span>
+      </div>
+      <div class="divider"></div>
+      <div class="cfg-title" style="margin-bottom:5px">Conexão Supabase</div>
       <div class="cfg-sub">Cole as credenciais do seu projeto para ativar o banco de dados compartilhado entre você e a Lana.</div>
       <div class="field"><label>Supabase URL</label><input type="text" id="sburl" placeholder="https://xxxxxxxxxxxx.supabase.co"></div>
       <div class="field"><label>Supabase Anon Key</label><input type="text" id="sbkey" placeholder="eyJhbGci..."></div>
@@ -474,6 +499,8 @@ function toggleDrawer(){document.getElementById('drawer').classList.toggle('open
 // ── SUPABASE ─────────────────────────────────────────────
 function loadCfg(){
   const url=localStorage.getItem('sb_url'),key=localStorage.getItem('sb_key');
+  const ck=localStorage.getItem('claude_key');
+  if(ck){document.getElementById('claude-key').value=ck;document.getElementById('claude-stat').textContent='API Key salva ✓';document.getElementById('claude-stat').style.color='var(--green)';}
   if(url&&key){document.getElementById('sburl').value=url;document.getElementById('sbkey').value=key;initSB(url,key)}
   else{setStatus(false,'Não configurado');fromLocal()}
 }
@@ -760,16 +787,65 @@ async function adicionarTodos(){
 }
 
 // ── ANALISAR COM IA ───────────────────────────────────────
+function salvarClaudeKey(){
+  const k=document.getElementById('claude-key').value.trim();
+  if(!k){toast('Cole sua API Key','err');return}
+  localStorage.setItem('claude_key',k);
+  document.getElementById('claude-stat').textContent='API Key salva ✓';
+  document.getElementById('claude-stat').style.color='var(--green)';
+  toast('API Key do Claude salva!');
+}
+
+async function apagarTodos(){
+  if(!confirm('Apagar TODOS os leads? Esta ação não pode ser desfeita.'))return;
+  if(sb){await sb.from('leads_ppv').delete().neq('id','00000000-0000-0000-0000-000000000000')}
+  leads=[];saveLocal();render();toast('Todos os leads foram apagados.');
+}
+
 async function analisarLeadSelecionado(){
   const row=csvRows[selectedIdx];if(!row)return;
+  const apiKey=localStorage.getItem('claude_key')||'';
+  if(!apiKey){toast('Configure sua API Key do Claude nas Configurações ⚙️','err');goPage('config',null);return;}
   const btn=document.getElementById('btn-analisar-ia');
   btn.disabled=true;btn.innerHTML='<span class="ldots"><span></span><span></span><span></span></span>';
   document.getElementById('ares').style.display='none';
   const respostas=Object.entries(RM).filter(([k])=>k!=='nome'&&k!=='email'&&k!=='whats'&&k!=='insta').map(([k,q])=>row[q]?`${q}: ${row[q]}`:'').filter(Boolean).join('\n');
-  const prompt=`Você é consultora de vendas da Manoela Flores, Método PPV.\n\nTUTORIA HANDS-ON (individual, alto ticket): fatura R$10k+, escolhe acompanhamento individual, quer escalar.\nACELERADORA PPV (grupo, método): fatura até R$10k, escolhe mentoria em grupo, quer estruturar vendas.\n\nRESPOSTAS DO FORMULÁRIO:\n${respostas}\n\nResponda APENAS JSON sem markdown:\n{"score_tutoria":0-100,"score_aceleradora":0-100,"recomendacao":"tutoria"ou"aceleradora"ou"nenhum","titulo":"frase curta sobre o lead","motivo":"1 frase explicando a recomendação","pontos_positivos":["...","..."],"pontos_atencao":["..."],"abordagem":"mensagem sugerida de primeiro contato no WhatsApp, tom humano e direto como a Manoela fala","motivacao_lead":"Não sabe o que postar"ou"Quer escalar o faturamento"ou"Conteúdo não converte"ou"Não sabe se posicionar"ou"Outro"}`;
+  const prompt=`Você é consultora de vendas da Manoela Flores, criadora do Método PPV (Posicionamento, Presença e Vendas).
+
+TUTORIA HANDS-ON (individual, alto ticket ~R$5k): ideal para quem já fatura algo, tem produto/serviço definido, quer atenção individual e resultado rápido.
+ACELERADORA PPV (grupo, ~R$2.5k): ideal para quem fatura até R$10k, quer método estruturado e comunidade, aceita formato de grupo.
+
+RESPOSTAS DO FORMULÁRIO:
+${respostas}
+
+Analise profundamente esse lead e responda APENAS JSON sem markdown:
+{
+  "score_tutoria": número 0-100,
+  "score_aceleradora": número 0-100,
+  "recomendacao": "tutoria" ou "aceleradora" ou "nenhum",
+  "titulo": "frase curta e direta sobre o momento desse lead",
+  "motivo": "1 frase explicando a recomendação com base nas respostas",
+  "pontos_positivos": ["ponto forte específico das respostas", "outro ponto forte"],
+  "pontos_atencao": ["ponto de atenção ou risco específico"],
+  "abordagem": "mensagem completa de primeiro contato no WhatsApp — tom humano, direto, mencione algo específico das respostas dela, não soe como robô. Como a Manoela falaria.",
+  "objecoes": [
+    {"objecao": "objeção específica que esse lead provavelmente vai levantar com base nas respostas", "quebra": "como quebrar essa objeção de forma natural, humana e específica para o contexto dela"},
+    {"objecao": "segunda objeção provável", "quebra": "como quebrar"}
+  ],
+  "gatilhos": [
+    "Gatilho específico para usar com esse lead — nome do gatilho + como aplicar exatamente no contexto dela com base nas respostas",
+    "Segundo gatilho + como aplicar"
+  ],
+  "motivacao_lead": "Não sabe o que postar" ou "Quer escalar o faturamento" ou "Conteúdo não converte" ou "Não sabe se posicionar" ou "Outro"
+}`;
   try{
-    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:700,messages:[{role:"user",content:prompt}]})});
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1200,messages:[{role:"user",content:prompt}]})
+    });
     const d=await res.json();
+    if(d.error){toast('Erro API: '+d.error.message,'err');btn.disabled=false;btn.innerHTML='Analisar com IA';return;}
     const r=JSON.parse(d.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim());
     const nome=row[RM.nome]||'Lead';
     leadAnal={nome,faturamento:row[RM.fat]||'—',origem:'Respondi',etapa:'novo',produto:r.recomendacao,motivo:r.motivacao_lead||'Outro',valor:0};
@@ -780,10 +856,38 @@ async function analisarLeadSelecionado(){
     const rL=r.recomendacao==='tutoria'?'Tutoria Hands-On':r.recomendacao==='aceleradora'?'Aceleradora PPV':'Não qualificado agora';
     const rTC=r.recomendacao==='tutoria'?'color:var(--navy)':r.recomendacao==='aceleradora'?'color:var(--gold2)':'color:var(--tx2)';
     document.getElementById('recbox').innerHTML=`<div class="rec-box ${rC}"><div class="rec-tag" style="${rTC}">${rL}</div><div class="rec-title">${r.titulo}</div><div class="rec-reason">${r.motivo}</div></div>`;
-    document.getElementById('pontos').innerHTML=[...(r.pontos_positivos||[]).map(p=>`<div style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><div style="width:6px;height:6px;border-radius:50%;background:var(--green);margin-top:5px;flex-shrink:0"></div><span>${p}</span></div>`),(r.pontos_atencao||[]).map(p=>`<div style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><div style="width:6px;height:6px;border-radius:50%;background:var(--amber);margin-top:5px;flex-shrink:0"></div><span>${p}</span></div>`)].flat().join('');
+    document.getElementById('pontos').innerHTML=[
+      ...(r.pontos_positivos||[]).map(p=>`<div style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><div style="width:6px;height:6px;border-radius:50%;background:var(--green);margin-top:5px;flex-shrink:0"></div><span>${p}</span></div>`),
+      ...(r.pontos_atencao||[]).map(p=>`<div style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><div style="width:6px;height:6px;border-radius:50%;background:var(--amber);margin-top:5px;flex-shrink:0"></div><span>${p}</span></div>`)
+    ].join('');
     document.getElementById('abordtxt').textContent=r.abordagem;
+
+    // Objeções
+    const objEl=document.getElementById('objecoes-body');
+    if(objEl&&r.objecoes?.length){
+      objEl.innerHTML=r.objecoes.map(o=>`
+        <div style="margin-bottom:14px;padding:12px 14px;background:rgba(163,45,45,.05);border-left:3px solid var(--red);border-radius:0 8px 8px 0">
+          <div style="font-size:11px;font-weight:500;color:var(--red);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">Objeção provável</div>
+          <div style="font-size:13px;font-weight:500;color:var(--tx);margin-bottom:8px">"${o.objecao}"</div>
+          <div style="font-size:11px;font-weight:500;color:var(--green);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">Como quebrar</div>
+          <div style="font-size:13px;color:var(--tx2);line-height:1.6">${o.quebra}</div>
+        </div>`).join('');
+      document.getElementById('objecoes-section').style.display='block';
+    }
+
+    // Gatilhos
+    const gatEl=document.getElementById('gatilhos-body');
+    if(gatEl&&r.gatilhos?.length){
+      gatEl.innerHTML=r.gatilhos.map((g,i)=>`
+        <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:12px 14px;background:rgba(201,168,76,.06);border-left:3px solid var(--gold);border-radius:0 8px 8px 0">
+          <div style="width:22px;height:22px;border-radius:50%;background:var(--gold);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;margin-top:1px">${i+1}</div>
+          <div style="font-size:13px;color:var(--tx2);line-height:1.6">${g}</div>
+        </div>`).join('');
+      document.getElementById('gatilhos-section').style.display='block';
+    }
+
     document.getElementById('ares').style.display='block';
-  }catch(e){toast('Erro ao analisar.','err');console.error(e)}
+  }catch(e){toast('Erro ao analisar. Verifique sua API Key.','err');console.error(e)}
   btn.disabled=false;btn.innerHTML='Analisar com IA';
 }
 
