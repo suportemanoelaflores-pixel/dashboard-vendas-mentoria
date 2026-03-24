@@ -654,17 +654,930 @@ function selecionarLead(idx){
   document.getElementById('sel-nome').textContent=nome;
   document.getElementById('sel-insta').textContent=row[RM.insta]||row[RM.email]||'';
   const campos=[
+    {q:'WhatsApp',v:row[RM.whats]},
     {q:'Faturamento médio mensal',v:row[RM.fat]},
     {q:'Vende principalmente através de',v:row[RM.vende]},
     {q:'Precisa mais de',v:row[RM.precisa]},
     {q:'Formato preferido',v:row[RM.formato]},
     {q:'Disponibilidade de investir',v:row[RM.investir]},
   ].filter(c=>c.v&&c.v.trim());
-  document.getElementById('sel-respostas').innerHTML=campos.map(c=>`
-    <div class="resp-row">
-      <div class="resp-q">${c.q}</div>
-      <div class="resp-a">${c.v}</div>
-    </div>`).join('');
+  document.getElementById('sel-respostas').innerHTML=campos.map(c=>{
+    const isWhats=c.q==='WhatsApp';
+    const val=isWhats?`<a href="https://wa.me/${c.v.replace(/\D/g,'')}" target="_blank" style="color:var(--blue);font-weight:500;text-decoration:none">📱 ${c.v} — abrir WhatsApp</a>`:c.v;
+    return`<div class="resp-row"><div class="resp-q">${c.q}</div><div class="resp-a">${val}</div></div>`;
+  }).join('');
+  document.getElementById('btn-analisar-ia').innerHTML='Analisar com IA';
+  document.getElementById('btn-analisar-ia').disabled=false;
+}
+
+function proximoLead(){
+  const validos=csvRows.map((r,i)=>({r,i})).filter(({r})=>r[RM.nome]&&!r[RM.nome].toLowerCase().includes('preço'));
+  const cur=validos.findIndex(({i})=>i===selectedIdx);
+  const next=validos[cur+1];
+  if(next)selecionarLead(next.i);
+  else toast('Você chegou ao último lead!');
+}
+
+// ── NAV ──────────────────────────────────────────────────
+function goPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tnav').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(el)el.classList.add('active');
+  const lbl={visao:'Visão',leads:'Leads',importar:'Import',analisar:'Analis',config:'Config'};
+  document.querySelectorAll('.tnav').forEach(b=>{if(b.textContent.trim().startsWith(lbl[id]))b.classList.add('active')});
+}
+
+// ── MODAL ─────────────────────────────────────────────────
+function abrirModal(){document.getElementById('modal').classList.add('open')}
+function fecharModal(){document.getElementById('modal').classList.remove('open')}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModal()});
+async function salvarLead(){
+  const nome=document.getElementById('fnom').value.trim();
+  if(!nome){toast('Informe o nome','err');return}
+  const l={nome,whatsapp:document.getElementById('fwhats').value||'—',instagram:document.getElementById('finsta').value||'—',faturamento:document.getElementById('ffat').value||'—',origem:document.getElementById('forig').value,etapa:document.getElementById('fetapa').value,produto:document.getElementById('fprod').value,motivo:document.getElementById('fmot').value,valor:parseFloat(document.getElementById('fval').value)||0};
+  fecharModal();['fnom','ffat','fval','fwhats','finsta'].forEach(id=>document.getElementById(id).value='');
+  await insertLead(l);toast('Lead salvo!');
+}
+
+// ── CSV ───────────────────────────────────────────────────
+function parseCSV(txt){
+  const lines=txt.trim().split(/\r?\n/);if(lines.length<2)return{headers:[],rows:[]};
+  const headers=lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim());
+  const rows=lines.slice(1).map(line=>{
+    const vals=[];let cur='',inQ=false;
+    for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){inQ=!inQ}else if(c===','&&!inQ){vals.push(cur.trim());cur=''}else cur+=c}
+    vals.push(cur.trim());
+    const o={};headers.forEach((h,i)=>{o[h]=(vals[i]||'').replace(/^"|"$/g,'').trim()});
+    return o;
+  }).filter(r=>Object.values(r).some(v=>v));
+  return{headers,rows};
+}
+
+function handleDrop(e){e.preventDefault();document.getElementById('uarea').classList.remove('drag');const f=e.dataTransfer.files[0];if(f)processFile(f)}
+function handleFile(e){if(e.target.files[0])processFile(e.target.files[0])}
+
+function processFile(file){
+  const r=new FileReader();
+  r.onload=e=>{
+    const{rows}=parseCSV(e.target.result);
+    if(!rows.length){toast('CSV vazio ou inválido','err');return}
+    csvRows=rows;
+    const validos=rows.filter(r=>r[RM.nome]&&r[RM.nome].trim()&&!r[RM.nome].toLowerCase().includes('preço'));
+    document.getElementById('finfo').innerHTML=`<div class="fbox"><span style="font-size:18px">📄</span><div style="flex:1"><div style="font-size:13px;font-weight:500">${file.name}</div><div style="font-size:11px;color:var(--tx2);margin-top:2px">${validos.length} leads válidos · <strong style="color:var(--green)">Formato Respondi detectado ✓</strong></div></div></div>`;
+    document.getElementById('bproc').style.display='inline-flex';
+    // Atualiza badge e pick list
+    const nbCsv=document.getElementById('nb-csv');
+    nbCsv.textContent=validos.length;nbCsv.style.display='inline';
+    renderPickList();
+  };
+  r.readAsText(file,'UTF-8');
+}
+
+function qualificarRegras(row){
+  const fat=(row[RM.fat]||'').toLowerCase();
+  const fmt=(row[RM.formato]||'').toLowerCase();
+  const prec=(row[RM.precisa]||'').toLowerCase();
+  const inv=(row[RM.investir]||'').toLowerCase();
+  let st=0,sa=0;
+  if(fat.includes('r$10k')||fat.includes('r$30k')||fat.includes('r$80k'))st+=35;
+  else if(fat.includes('até r$10k')){st+=15;sa+=35}
+  else if(fat.includes('ainda não'))sa+=15;
+  if(fmt.includes('individual'))st+=40;
+  else if(fmt.includes('grupo'))sa+=40;
+  if(prec.includes('escalar'))st+=20;
+  else if(prec.includes('estruturar')){st+=10;sa+=20}
+  else if(prec.includes('gerar'))sa+=15;
+  if(inv.includes('sim'))st+=5,sa+=5;
+  const rec=st>sa?(st>=40?'tutoria':'nenhum'):(sa>=40?'aceleradora':'nenhum');
+  let mot='Outro';
+  if(prec.includes('escalar'))mot='Quer escalar o faturamento';
+  else if(prec.includes('estruturar')||prec.includes('conversão'))mot='Conteúdo não converte';
+  else if(prec.includes('gerar'))mot='Não sabe o que postar';
+  else if(prec.includes('organizar')||prec.includes('processo'))mot='Não sabe se posicionar';
+  return{score_tutoria:Math.min(st,100),score_aceleradora:Math.min(sa,100),recomendacao:rec,motivacao_lead:mot};
+}
+
+async function processarCSV(){
+  if(!csvRows.length)return;
+  const btn=document.getElementById('bproc');btn.disabled=true;btn.innerHTML='<span class="ldots"><span></span><span></span><span></span></span>';
+  document.getElementById('improg').style.display='block';document.getElementById('impres').style.display='none';
+  impRes=[];
+  const validos=csvRows.filter(r=>r[RM.nome]&&r[RM.nome].trim()&&!r[RM.nome].toLowerCase().includes('preço'));
+  for(let i=0;i<validos.length;i++){
+    const row=validos[i];
+    document.getElementById('proglbl').textContent=`Qualificando ${i+1} de ${validos.length}: ${row[RM.nome]}`;
+    document.getElementById('progbar').style.width=Math.round(i/validos.length*100)+'%';
+    const r=qualificarRegras(row);
+    impRes.push({nome:row[RM.nome],whatsapp:row[RM.whats]||'—',instagram:row[RM.insta]||'—',faturamento:row[RM.fat]||'—',formato:row[RM.formato]||'—',...r});
+  }
+  document.getElementById('progbar').style.width='100%';
+  document.getElementById('proglbl').textContent=`Concluído — ${impRes.length} leads qualificados`;
+  const t=impRes.filter(r=>r.recomendacao==='tutoria').length,a=impRes.filter(r=>r.recomendacao==='aceleradora').length;
+  document.getElementById('itotal').textContent=impRes.length;
+  document.getElementById('itut').textContent=t;
+  document.getElementById('iacel').textContent=a;
+  document.getElementById('imptbody').innerHTML=impRes.map(r=>{
+    const pC=r.recomendacao==='tutoria'?'pill-t':r.recomendacao==='aceleradora'?'pill-a':'pill-n';
+    const pL=r.recomendacao==='tutoria'?'Tutoria':r.recomendacao==='aceleradora'?'Aceleradora':'—';
+    return`<tr><td><strong>${r.nome}</strong><br><span style="font-size:11px;color:var(--tx2)">${r.instagram}</span></td><td style="color:var(--tx2)">${r.faturamento}</td><td style="font-size:12px;color:var(--tx2)">${r.formato}</td><td><span class="pill ${pC}">${pL}</span></td><td style="font-size:11px"><span style="color:var(--navy);font-weight:500">T ${r.score_tutoria}%</span> · <span style="color:var(--gold2);font-weight:500">A ${r.score_aceleradora}%</span></td></tr>`;
+  }).join('');
+  document.getElementById('impres').style.display='block';
+  btn.disabled=false;btn.innerHTML='Qualificar todos';
+  renderPickList();
+}
+
+async function adicionarTodos(){
+  for(const r of impRes)await insertLead({nome:r.nome,whatsapp:r.whatsapp||'—',instagram:r.instagram||'—',faturamento:r.faturamento,origem:'Respondi',etapa:'novo',produto:r.recomendacao,motivo:r.motivacao_lead||'Outro',valor:0});
+  toast(`${impRes.length} leads adicionados!`);goPage('leads',null);
+}
+
+// ── ANALISAR COM IA ───────────────────────────────────────
+function salvarClaudeKey(){
+  const k=document.getElementById('claude-key').value.trim();
+  if(!k){toast('Cole sua API Key','err');return}
+  localStorage.setItem('claude_key',k);
+  document.getElementById('claude-stat').textContent='API Key salva ✓';
+  document.getElementById('claude-stat').style.color='var(--green)';
+  toast('API Key do Claude salva!');
+}
+
+async function apagarTodos(){
+  if(!confirm('Apagar TODOS os leads? Esta ação não pode ser desfeita.'))return;
+  if(sb){await sb.from('leads_ppv').delete().neq('id','00000000-0000-0000-0000-000000000000')}
+  leads=[];saveLocal();render();toast('Todos os leads foram apagados.');
+}
+
+async function analisarLeadSelecionado(){
+  const row=csvRows[selectedIdx];if(!row)return;
+  const apiKey=localStorage.getItem('claude_key')||'';
+  if(!apiKey){toast('Configure sua API Key do Claude nas Configurações ⚙️','err');goPage('config',null);return;}
+  const btn=document.getElementById('btn-analisar-ia');
+  btn.disabled=true;btn.innerHTML='<span class="ldots"><span></span><span></span><span></span></span>';
+  document.getElementById('ares').style.display='none';
+  const respostas=Object.entries(RM).filter(([k])=>k!=='nome'&&k!=='email'&&k!=='whats'&&k!=='insta').map(([k,q])=>row[q]?`${q}: ${row[q]}`:'').filter(Boolean).join('\n');
+  const prompt=`Você é consultora de vendas da Manoela Flores, criadora do Método PPV (Posicionamento, Presença e Vendas).
+
+TUTORIA HANDS-ON (individual, alto ticket ~R$5k): ideal para quem já fatura algo, tem produto/serviço definido, quer atenção individual e resultado rápido.
+ACELERADORA PPV (grupo, ~R$2.5k): ideal para quem fatura até R$10k, quer método estruturado e comunidade, aceita formato de grupo.
+
+RESPOSTAS DO FORMULÁRIO:
+${respostas}
+
+Analise profundamente esse lead e responda APENAS JSON sem markdown:
+{
+  "score_tutoria": número 0-100,
+  "score_aceleradora": número 0-100,
+  "recomendacao": "tutoria" ou "aceleradora" ou "nenhum",
+  "titulo": "frase curta e direta sobre o momento desse lead",
+  "motivo": "1 frase explicando a recomendação com base nas respostas",
+  "pontos_positivos": ["ponto forte específico das respostas", "outro ponto forte"],
+  "pontos_atencao": ["ponto de atenção ou risco específico"],
+  "abordagem": "mensagem completa de primeiro contato no WhatsApp — tom humano, direto, mencione algo específico das respostas dela, não soe como robô. Como a Manoela falaria.",
+  "objecoes": [
+    {"objecao": "objeção específica que esse lead provavelmente vai levantar com base nas respostas", "quebra": "como quebrar essa objeção de forma natural, humana e específica para o contexto dela"},
+    {"objecao": "segunda objeção provável", "quebra": "como quebrar"}
+  ],
+  "gatilhos": [
+    "Gatilho específico para usar com esse lead — nome do gatilho + como aplicar exatamente no contexto dela com base nas respostas",
+    "Segundo gatilho + como aplicar"
+  ],
+  "motivacao_lead": "Não sabe o que postar" ou "Quer escalar o faturamento" ou "Conteúdo não converte" ou "Não sabe se posicionar" ou "Outro"
+}`;
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1200,messages:[{role:"user",content:prompt}]})
+    });
+    const d=await res.json();
+    if(d.error){toast('Erro API: '+d.error.message,'err');btn.disabled=false;btn.innerHTML='Analisar com IA';return;}
+    const r=JSON.parse(d.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim());
+    const nome=row[RM.nome]||'Lead';
+    leadAnal={nome,whatsapp:row[RM.whats]||'—',instagram:row[RM.insta]||'—',faturamento:row[RM.fat]||'—',origem:'Respondi',etapa:'novo',produto:r.recomendacao,motivo:r.motivacao_lead||'Outro',valor:0};
+    document.getElementById('st').textContent=r.score_tutoria+'%';
+    document.getElementById('sa').textContent=r.score_aceleradora+'%';
+    setTimeout(()=>{document.getElementById('sbt').style.width=r.score_tutoria+'%';document.getElementById('sba').style.width=r.score_aceleradora+'%'},100);
+    const rC=r.recomendacao==='tutoria'?'rec-t':r.recomendacao==='aceleradora'?'rec-a':'rec-n';
+    const rL=r.recomendacao==='tutoria'?'Tutoria Hands-On':r.recomendacao==='aceleradora'?'Aceleradora PPV':'Não qualificado agora';
+    const rTC=r.recomendacao==='tutoria'?'color:var(--navy)':r.recomendacao==='aceleradora'?'color:var(--gold2)':'color:var(--tx2)';
+    document.getElementById('recbox').innerHTML=`<div class="rec-box ${rC}"><div class="rec-tag" style="${rTC}">${rL}</div><div class="rec-title">${r.titulo}</div><div class="rec-reason">${r.motivo}</div></div>`;
+    document.getElementById('pontos').innerHTML=[
+      ...(r.pontos_positivos||[]).map(p=>`<div style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><div style="width:6px;height:6px;border-radius:50%;background:var(--green);margin-top:5px;flex-shrink:0"></div><span>${p}</span></div>`),
+      ...(r.pontos_atencao||[]).map(p=>`<div style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><div style="width:6px;height:6px;border-radius:50%;background:var(--amber);margin-top:5px;flex-shrink:0"></div><span>${p}</span></div>`)
+    ].join('');
+    document.getElementById('abordtxt').textContent=r.abordagem;
+
+    // Objeções
+    const objEl=document.getElementById('objecoes-body');
+    if(objEl&&r.objecoes?.length){
+      objEl.innerHTML=r.objecoes.map(o=>`
+        <div style="margin-bottom:14px;padding:12px 14px;background:rgba(163,45,45,.05);border-left:3px solid var(--red);border-radius:0 8px 8px 0">
+          <div style="font-size:11px;font-weight:500;color:var(--red);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">Objeção provável</div>
+          <div style="font-size:13px;font-weight:500;color:var(--tx);margin-bottom:8px">"${o.objecao}"</div>
+          <div style="font-size:11px;font-weight:500;color:var(--green);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">Como quebrar</div>
+          <div style="font-size:13px;color:var(--tx2);line-height:1.6">${o.quebra}</div>
+        </div>`).join('');
+      document.getElementById('objecoes-section').style.display='block';
+    }
+
+    // Gatilhos
+    const gatEl=document.getElementById('gatilhos-body');
+    if(gatEl&&r.gatilhos?.length){
+      gatEl.innerHTML=r.gatilhos.map((g,i)=>`
+        <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:12px 14px;background:rgba(201,168,76,.06);border-left:3px solid var(--gold);border-radius:0 8px 8px 0">
+          <div style="width:22px;height:22px;border-radius:50%;background:var(--gold);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;margin-top:1px">${i+1}</div>
+          <div style="font-size:13px;color:var(--tx2);line-height:1.6">${g}</div>
+        </div>`).join('');
+      document.getElementById('gatilhos-section').style.display='block';
+    }
+
+    document.getElementById('ares').style.display='block';
+  }catch(e){toast('Erro ao analisar. Verifique sua API Key.','err');console.error(e)}
+  btn.disabled=false;btn.innerHTML='Analisar com IA';
+}
+
+async function addLeadAnalisado(){
+  if(!leadAnal)return;
+  await insertLead(leadAnal);
+  toast('Lead adicionado ao pipeline!');
+  proximoLead();
+}
+
+function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(type==='err'?' err':'');setTimeout(()=>t.classList.remove('show'),3000)}
+
+loadCfg();
+setTimeout(()=>{const fat=leads.filter(l=>l.etapa==='fechado').reduce((s,l)=>s+(+l.valor||0),0);const el=document.getElementById('mfill');if(el)el.style.width=Math.min(100,Math.round(fat/META*100))+'%'},400);
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Comercial · Método PPV</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --navy:#0C1130;--navy2:#1a2448;--navy3:#2a3560;
+  --cream:#F0EAD8;--gold:#C9A84C;--gold2:#9a7530;
+  --bg:#f4f1eb;--surf:#fff;--surf2:#f0ede6;
+  --bdr:rgba(12,17,48,.1);--bdr2:rgba(12,17,48,.2);
+  --tx:#0C1130;--tx2:#5a6080;--tx3:#9aa0b8;
+  --green:#3B6D11;--blue:#185FA5;--purple:#534AB7;--amber:#854F0B;--red:#A32D2D;
+  --r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+.topbar{background:var(--navy);display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:52px;position:sticky;top:0;z-index:100}
+.tb-brand{font-family:'Playfair Display',serif;font-size:18px;color:var(--cream);font-weight:500;white-space:nowrap;margin-right:1.5rem}
+.tb-brand em{color:var(--gold);font-style:italic}
+.tb-nav{display:flex;gap:4px}
+.tnav{background:none;border:none;padding:6px 14px;border-radius:20px;font-size:13px;color:#8a93b8;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap}
+.tnav:hover{color:var(--cream);background:rgba(255,255,255,.07)}
+.tnav.active{background:var(--cream);color:var(--navy);font-weight:500}
+.tb-right{display:flex;align-items:center;gap:10px}
+.tb-count{font-size:12px;color:#6b75a0;white-space:nowrap}
+.tb-btn{background:var(--gold);color:var(--navy);border:none;border-radius:20px;padding:6px 16px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s;white-space:nowrap}
+.tb-btn:hover{opacity:.85}
+.hamburger{display:none;background:none;border:none;cursor:pointer;color:var(--cream);padding:4px}
+.drawer{display:none;position:fixed;top:52px;left:0;right:0;background:var(--navy2);z-index:90;padding:.5rem;flex-direction:column;gap:2px;border-bottom:1px solid var(--navy3)}
+.drawer.open{display:flex}
+.drawer .tnav{text-align:left;border-radius:8px;padding:10px 14px}
+.main{padding:2rem 2.5rem;max-width:1400px;margin:0 auto}
+.page{display:none}
+.page.active{display:block}
+.phdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.75rem;flex-wrap:wrap;gap:.75rem}
+.ptitle{font-family:'Playfair Display',serif;font-size:28px;font-weight:500}
+.ptitle em{color:var(--gold);font-style:italic}
+.psub{font-size:13px;color:var(--tx2);margin-top:3px}
+.meta-card{background:var(--navy);border-radius:var(--r);padding:1.5rem 2rem;margin-bottom:1.75rem;display:flex;align-items:center;gap:3rem;flex-wrap:wrap}
+.meta-left{flex:1;min-width:180px}
+.meta-lbl{font-size:11px;color:#8a93b8;text-transform:uppercase;letter-spacing:.9px;margin-bottom:4px}
+.meta-val{font-family:'Playfair Display',serif;font-size:36px;color:var(--cream);font-weight:500;line-height:1}
+.meta-sub{font-size:13px;color:#6b75a0;margin-top:6px}
+.meta-prog{flex:2;min-width:240px}
+.meta-prog-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.meta-prog-lbl{font-size:12px;color:#8a93b8}
+.meta-pct{font-size:16px;font-weight:500;color:var(--gold)}
+.meta-bg{background:var(--navy2);border-radius:6px;height:8px;overflow:hidden}
+.meta-fill{height:8px;background:var(--gold);border-radius:6px;width:0%;transition:width 1s ease}
+.meta-rest{font-size:12px;color:#6b75a0;margin-top:6px}
+.meta-prods{display:flex;flex-direction:column;gap:10px;min-width:160px}
+.meta-prod-lbl{font-size:10px;color:#8a93b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px}
+.meta-prod-val{font-family:'Playfair Display',serif;font-size:18px;color:var(--cream);font-weight:500}
+.meta-prod-sub{font-size:11px;color:#6b75a0}
+.g5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:1.75rem}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:1.75rem}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:1.75rem}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:1.75rem}
+.kpi{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:1.25rem 1.4rem;position:relative;overflow:hidden;transition:border-color .15s,transform .15s}
+.kpi:hover{border-color:var(--bdr2);transform:translateY(-2px)}
+.kpi-acc{position:absolute;top:0;left:0;right:0;height:3px}
+.kpi-lbl{font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.8px;margin:4px 0 8px}
+.kpi-val{font-family:'Playfair Display',serif;font-size:26px;color:var(--tx);font-weight:500}
+.kpi-sub{font-size:12px;color:var(--tx3);margin-top:4px}
+.pipe-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:1.75rem}
+.pipe-col{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:1.25rem;text-align:center;transition:border-color .15s,transform .15s}
+.pipe-col:hover{border-color:var(--bdr2);transform:translateY(-2px)}
+.pipe-dot{width:10px;height:10px;border-radius:50%;margin:0 auto 10px}
+.pipe-lbl{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.9px;color:var(--tx2);margin-bottom:8px}
+.pipe-n{font-family:'Playfair Display',serif;font-size:32px;font-weight:500;color:var(--tx)}
+.pipe-v{font-size:12px;color:var(--tx3);margin-top:4px}
+.card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:1.4rem 1.6rem}
+.card-title{font-size:11px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.9px;margin-bottom:16px}
+.rank-item{margin-bottom:13px}
+.rank-item:last-child{margin-bottom:0}
+.rank-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.rank-name{font-size:13px;font-weight:500;color:var(--tx)}
+.rank-info{font-size:11px;color:var(--tx2)}
+.rank-bg{background:var(--surf2);border-radius:4px;height:5px;overflow:hidden}
+.rank-bar{height:5px;border-radius:4px;transition:width .8s ease}
+.leads-tb{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1rem;align-items:center}
+.search{flex:1;min-width:200px;padding:9px 16px;border:1px solid var(--bdr);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--tx);background:var(--surf);outline:none;transition:border-color .15s}
+.search:focus{border-color:var(--navy)}
+.filt{padding:7px 16px;border:1px solid var(--bdr);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--tx2);background:var(--surf);cursor:pointer;transition:all .15s;white-space:nowrap}
+.filt:hover,.filt.active{background:var(--navy);color:var(--cream);border-color:var(--navy)}
+.ltable{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden}
+.t-head{display:grid;grid-template-columns:2fr 1.1fr 1.1fr 1.4fr 1fr 1fr 60px;padding:10px 20px;border-bottom:1px solid var(--bdr);background:var(--surf2)}
+.th{font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.7px}
+.t-row{display:grid;grid-template-columns:2fr 1.1fr 1.1fr 1.4fr 1fr 1fr 60px;padding:14px 20px;border-bottom:1px solid var(--bdr);align-items:center;transition:background .1s}
+.t-row:last-child{border-bottom:none}
+.t-row:hover{background:var(--surf2)}
+.lav{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;margin-right:10px;flex-shrink:0}
+.av-t{background:rgba(12,17,48,.08);color:var(--navy)}
+.av-a{background:rgba(201,168,76,.15);color:#7a5a10}
+.av-n{background:var(--surf2);color:var(--tx2);border:1px solid var(--bdr)}
+.lname{font-size:13px;font-weight:500;color:var(--tx)}
+.lsub{font-size:11px;color:var(--tx3);margin-top:1px}
+.pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.pill-t{background:rgba(12,17,48,.08);color:var(--navy)}
+.pill-a{background:rgba(201,168,76,.15);color:#7a5a10}
+.pill-n{background:var(--surf2);color:var(--tx2);border:1px solid var(--bdr)}
+.ep{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px}
+.e-novo{background:#faeeda;color:#633806}
+.e-qualificado{background:#e6f1fb;color:#0C447C}
+.e-aplicou{background:#eeedfe;color:#3C3489}
+.e-negociacao{background:#fef3e2;color:#854F0B}
+.e-fechado{background:#eaf3de;color:#27500A}
+.mchip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:500}
+.delbtn{background:none;border:1px solid var(--bdr);border-radius:8px;padding:5px 9px;cursor:pointer;color:var(--tx2);font-size:12px;transition:all .15s}
+.delbtn:hover{background:#fcebeb;color:var(--red);border-color:#f09595}
+.btn{background:var(--navy);color:var(--cream);border:none;border-radius:20px;padding:9px 22px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .15s;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn:hover{opacity:.85}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-out{background:none;border:1px solid var(--bdr);color:var(--tx2);border-radius:20px;padding:8px 18px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .15s}
+.btn-out:hover{background:var(--surf2);color:var(--tx)}
+.mov{display:none;position:fixed;inset:0;background:rgba(12,17,48,.65);z-index:200;align-items:center;justify-content:center;padding:1rem}
+.mov.open{display:flex}
+.modal{background:var(--surf);border-radius:16px;padding:2rem;width:100%;max-width:500px;max-height:92vh;overflow-y:auto}
+.modal-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:500;margin-bottom:1.4rem}
+.field{margin-bottom:12px}
+.field label{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--tx2);display:block;margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;padding:10px 14px;border:1px solid var(--bdr);border-radius:10px;font-size:13px;color:var(--tx);background:var(--surf2);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--navy);background:var(--surf)}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:1.4rem}
+.btn-cancel{background:none;border:1px solid var(--bdr);color:var(--tx2);border-radius:20px;padding:9px 20px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer}
+.uarea{border:2px dashed var(--bdr2);border-radius:var(--r);padding:3rem;text-align:center;cursor:pointer;transition:all .2s;background:var(--surf)}
+.uarea:hover,.uarea.drag{border-color:var(--navy);background:rgba(12,17,48,.03)}
+.uarea-icon{font-size:40px;margin-bottom:12px}
+.uarea-title{font-size:16px;font-weight:500;color:var(--tx);margin-bottom:5px}
+.uarea-sub{font-size:14px;color:var(--tx2)}
+.uarea-sub span{color:var(--navy);font-weight:500;cursor:pointer;text-decoration:underline}
+.fbox{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--surf2);border-radius:10px;border:1px solid var(--bdr);margin-top:14px}
+.prog-wrap{background:var(--bdr);border-radius:6px;height:6px;overflow:hidden;margin:14px 0 6px}
+.prog-bar{height:6px;background:var(--navy);border-radius:6px;transition:width .4s ease}
+.imp-table{width:100%;border-collapse:collapse;font-size:13px}
+.imp-table th{text-align:left;padding:10px 16px;font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.7px;border-bottom:1px solid var(--bdr);background:var(--surf2)}
+.imp-table td{padding:12px 16px;border-bottom:1px solid var(--bdr);vertical-align:middle}
+.imp-table tr:last-child td{border-bottom:none}
+.imp-table tr:hover td{background:var(--surf2)}
+/* ── ANALISAR ── */
+.anal-layout{display:grid;grid-template-columns:320px 1fr;gap:1.5rem;align-items:start}
+.lead-pick-list{display:flex;flex-direction:column;gap:6px;max-height:70vh;overflow-y:auto;padding-right:4px}
+.lead-pick-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surf);border:1px solid var(--bdr);border-radius:10px;cursor:pointer;transition:all .15s}
+.lead-pick-item:hover{border-color:var(--navy);background:rgba(12,17,48,.03)}
+.lead-pick-item.selected{border-color:var(--navy);background:rgba(12,17,48,.06);box-shadow:0 0 0 2px rgba(12,17,48,.15)}
+.lead-pick-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0;background:var(--surf2);color:var(--tx2);border:1px solid var(--bdr)}
+.lead-pick-name{font-size:13px;font-weight:500;color:var(--tx)}
+.lead-pick-sub{font-size:11px;color:var(--tx3);margin-top:1px}
+.lead-pick-badge{margin-left:auto;flex-shrink:0}
+.anal-search{width:100%;padding:9px 14px;border:1px solid var(--bdr);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--tx);background:var(--surf);outline:none;margin-bottom:10px;transition:border-color .15s}
+.anal-search:focus{border-color:var(--navy)}
+.anal-right{display:flex;flex-direction:column;gap:1rem}
+.anal-empty{display:flex;align-items:center;justify-content:center;min-height:400px;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r)}
+.resp-card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:1.4rem 1.6rem}
+.resp-row{display:flex;gap:1rem;padding:10px 0;border-bottom:1px solid var(--bdr)}
+.resp-row:last-child{border-bottom:none}
+.resp-q{font-size:11px;color:var(--tx2);width:220px;flex-shrink:0;line-height:1.5;padding-top:1px}
+.resp-a{font-size:13px;font-weight:500;color:var(--tx);flex:1;line-height:1.5}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1rem}
+.sc{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:1.25rem 1.4rem}
+.sc-lbl{font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.sc-num{font-family:'Playfair Display',serif;font-size:32px;font-weight:500}
+.sb-bg{background:var(--surf2);border-radius:4px;height:5px;margin-top:8px;overflow:hidden}
+.sb-fill{height:5px;border-radius:4px;transition:width .8s ease}
+.rec-box{border-radius:var(--r);padding:1.25rem 1.5rem;margin-bottom:1rem}
+.rec-t{background:rgba(12,17,48,.05);border:2px solid var(--navy)}
+.rec-a{background:rgba(201,168,76,.08);border:2px solid var(--gold)}
+.rec-n{background:var(--surf2);border:1px solid var(--bdr)}
+.rec-tag{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.9px;margin-bottom:6px}
+.rec-title{font-size:17px;font-weight:500;color:var(--tx);margin-bottom:5px}
+.rec-reason{font-size:13px;color:var(--tx2);line-height:1.6}
+.abord{background:rgba(12,17,48,.04);border-left:3px solid var(--navy);border-radius:0 10px 10px 0;padding:14px 18px}
+.abord-lbl{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.9px;color:var(--navy);margin-bottom:7px}
+.abord-text{font-size:13px;color:var(--tx);line-height:1.75;font-style:italic}
+.cfg-card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:1.75rem 2rem;margin-bottom:1rem}
+.cfg-title{font-size:16px;font-weight:500;color:var(--tx);margin-bottom:5px}
+.cfg-sub{font-size:13px;color:var(--tx2);margin-bottom:1.25rem;line-height:1.65}
+.sdot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:7px}
+.empty{text-align:center;padding:3rem 1rem;color:var(--tx2);font-size:14px}
+.empty-icon{font-size:36px;margin-bottom:10px;opacity:.3}
+.sec-lbl{font-size:11px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.9px;margin-bottom:10px}
+.divider{border:none;border-top:1px solid var(--bdr);margin:1rem 0}
+.ldots{display:inline-flex;gap:4px}
+.ldots span{width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 1.2s infinite}
+.ldots span:nth-child(2){animation-delay:.2s}
+.ldots span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.toast{position:fixed;bottom:1.75rem;right:1.75rem;background:var(--navy);color:var(--cream);padding:13px 24px;border-radius:20px;font-size:13px;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;box-shadow:0 4px 24px rgba(12,17,48,.25)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.err{background:var(--red)}
+.info-box{background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.3);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--tx2);margin-bottom:1rem;line-height:1.6}
+.info-box strong{color:var(--tx)}
+@media(max-width:900px){
+  .topbar{padding:0 1rem}.tb-nav{display:none}.hamburger{display:block}
+  .main{padding:1.25rem 1rem}
+  .g5,.pipe-grid{grid-template-columns:repeat(3,1fr)}
+  .g4,.g3{grid-template-columns:repeat(2,1fr)}
+  .t-head,.t-row{grid-template-columns:2fr 1fr 60px}
+  .th:nth-child(n+3):nth-child(-n+5),.t-row>*:nth-child(n+3):nth-child(-n+5){display:none}
+  .meta-card{flex-direction:column;gap:1.25rem}
+  .anal-layout{grid-template-columns:1fr}
+  .sg{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .g4,.g3,.g2{grid-template-columns:1fr}
+  .g5,.pipe-grid{grid-template-columns:repeat(2,1fr)}
+  .fg2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div style="display:flex;align-items:center">
+    <div class="tb-brand">PPV <em>Vendas</em></div>
+    <nav class="tb-nav">
+      <button class="tnav active" onclick="goPage('visao',this)">Visão Geral</button>
+      <button class="tnav" onclick="goPage('leads',this)">Leads <span id="nb" style="background:rgba(255,255,255,.15);padding:1px 7px;border-radius:10px;font-size:11px;margin-left:2px">0</span></button>
+      <button class="tnav" onclick="goPage('importar',this)">Importar CSV</button>
+      <button class="tnav" onclick="goPage('analisar',this)">Analisar Lead <span id="nb-csv" style="display:none;background:rgba(201,168,76,.3);color:var(--gold);padding:1px 7px;border-radius:10px;font-size:11px;margin-left:2px">0</span></button>
+      <button class="tnav" onclick="goPage('config',this)">Config</button>
+    </nav>
+  </div>
+  <div class="tb-right">
+    <span class="tb-count" id="tbfat">R$ 0 faturado</span>
+    <button class="tb-btn" onclick="abrirModal()">+ Novo lead</button>
+    <button class="hamburger" onclick="toggleDrawer()">
+      <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</header>
+<div class="drawer" id="drawer">
+  <button class="tnav active" onclick="goPage('visao',this);toggleDrawer()">Visão Geral</button>
+  <button class="tnav" onclick="goPage('leads',this);toggleDrawer()">Leads</button>
+  <button class="tnav" onclick="goPage('importar',this);toggleDrawer()">Importar CSV</button>
+  <button class="tnav" onclick="goPage('analisar',this);toggleDrawer()">Analisar Lead</button>
+  <button class="tnav" onclick="goPage('config',this);toggleDrawer()">Config</button>
+</div>
+
+<div class="main">
+
+<!-- VISÃO GERAL -->
+<div class="page active" id="page-visao">
+  <div class="phdr"><div><div class="ptitle">Dashboard de <em>Vendas</em></div><div class="psub" id="vsub">Método PPV · carregando...</div></div></div>
+  <div class="meta-card">
+    <div class="meta-left">
+      <div class="meta-lbl">Faturado no mês</div>
+      <div class="meta-val" id="mval">R$ 0</div>
+      <div class="meta-sub" id="msub">0 vendas fechadas</div>
+    </div>
+    <div class="meta-prog">
+      <div class="meta-prog-top"><div class="meta-prog-lbl">Meta — R$ 100.000</div><div class="meta-pct" id="mpct">0%</div></div>
+      <div class="meta-bg"><div class="meta-fill" id="mfill"></div></div>
+      <div class="meta-rest" id="mrest">—</div>
+    </div>
+    <div class="meta-prods">
+      <div><div class="meta-prod-lbl">Tutoria Hands-On</div><div class="meta-prod-val" id="mtv">—</div><div class="meta-prod-sub" id="mtf">—</div></div>
+      <div><div class="meta-prod-lbl">Aceleradora PPV</div><div class="meta-prod-val" id="mav">—</div><div class="meta-prod-sub" id="maf">—</div></div>
+    </div>
+  </div>
+  <div class="pipe-grid">
+    <div class="pipe-col"><div class="pipe-dot" style="background:var(--gold)"></div><div class="pipe-lbl">Novo</div><div class="pipe-n" id="pcn">0</div><div class="pipe-v" id="pvn">—</div></div>
+    <div class="pipe-col"><div class="pipe-dot" style="background:var(--blue)"></div><div class="pipe-lbl">Qualificado</div><div class="pipe-n" id="pcq">0</div><div class="pipe-v" id="pvq">—</div></div>
+    <div class="pipe-col"><div class="pipe-dot" style="background:var(--purple)"></div><div class="pipe-lbl">Aplicou</div><div class="pipe-n" id="pca">0</div><div class="pipe-v" id="pva">—</div></div>
+    <div class="pipe-col"><div class="pipe-dot" style="background:var(--amber)"></div><div class="pipe-lbl">Negociação</div><div class="pipe-n" id="pcng">0</div><div class="pipe-v" id="pvng">—</div></div>
+    <div class="pipe-col"><div class="pipe-dot" style="background:var(--green)"></div><div class="pipe-lbl">Fechado</div><div class="pipe-n" id="pcf">0</div><div class="pipe-v" id="pvf">—</div></div>
+  </div>
+  <div class="g4">
+    <div class="kpi"><div class="kpi-acc" style="background:var(--gold)"></div><div class="kpi-lbl">Faturamento total</div><div class="kpi-val" id="kfat">—</div></div>
+    <div class="kpi"><div class="kpi-acc" style="background:var(--navy)"></div><div class="kpi-lbl">Vendas fechadas</div><div class="kpi-val" id="kvend">—</div></div>
+    <div class="kpi"><div class="kpi-acc" style="background:var(--green)"></div><div class="kpi-lbl">Ticket médio</div><div class="kpi-val" id="ktick">—</div></div>
+    <div class="kpi"><div class="kpi-acc" style="background:var(--blue)"></div><div class="kpi-lbl">Total de leads</div><div class="kpi-val" id="ktleads">—</div></div>
+  </div>
+  <div class="g3">
+    <div class="card"><div class="card-title">Por produto</div><div id="rprod"><div class="empty" style="padding:.5rem 0;font-size:12px">—</div></div></div>
+    <div class="card"><div class="card-title">Origem dos leads</div><div id="rorig"><div class="empty" style="padding:.5rem 0;font-size:12px">—</div></div></div>
+    <div class="card" style="border-top:3px solid var(--gold)"><div class="card-title">Por que buscam</div><div id="rmot"><div class="empty" style="padding:.5rem 0;font-size:12px">—</div></div></div>
+  </div>
+</div>
+
+<!-- LEADS -->
+<div class="page" id="page-leads">
+  <div class="phdr">
+    <div><div class="ptitle">Leads</div><div class="psub" id="lsub">0 leads cadastrados</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-out" style="color:var(--red);border-color:rgba(163,45,45,.3)" onclick="apagarTodos()">🗑 Apagar todos</button>
+      <button class="btn" onclick="abrirModal()">+ Novo lead</button>
+    </div>
+  </div>
+  <div class="leads-tb">
+    <input class="search" type="text" placeholder="Buscar por nome..." id="search" oninput="renderLeads()">
+    <button class="filt active" onclick="setFiltro('todos',this)">Todos</button>
+    <button class="filt" onclick="setFiltro('tutoria',this)">Tutoria</button>
+    <button class="filt" onclick="setFiltro('aceleradora',this)">Aceleradora</button>
+    <button class="filt" onclick="setFiltro('nenhum',this)">Não qualif.</button>
+  </div>
+  <div class="ltable">
+    <div class="t-head"><div class="th">Lead</div><div class="th">Produto</div><div class="th">Etapa</div><div class="th">Motivação</div><div class="th">WhatsApp</div><div class="th">Origem</div><div class="th"></div></div>
+    <div id="leads-body"><div class="empty"><div class="empty-icon">👤</div>Nenhum lead ainda.</div></div>
+  </div>
+</div>
+
+<!-- IMPORTAR -->
+<div class="page" id="page-importar">
+  <div class="phdr"><div><div class="ptitle">Importar <em>CSV</em></div><div class="psub">Suba o arquivo do Respondi — colunas detectadas automaticamente</div></div></div>
+  <div class="info-box"><strong>Detecção automática ativa.</strong> O dashboard reconhece o formato exato do seu Respondi e mapeia nome, faturamento, necessidade, formato preferido e disponibilidade de investimento automaticamente.</div>
+  <div class="card" style="margin-bottom:1rem">
+    <div class="uarea" id="uarea" onclick="document.getElementById('finput').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
+      <div class="uarea-icon">📄</div>
+      <div class="uarea-title">Arraste o CSV do Respondi aqui</div>
+      <div class="uarea-sub">ou <span onclick="event.stopPropagation();document.getElementById('finput').click()">clique para selecionar</span></div>
+    </div>
+    <input type="file" id="finput" accept=".csv" style="display:none" onchange="handleFile(event)">
+    <div id="finfo"></div>
+    <div style="margin-top:1.25rem;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="btn" id="bproc" onclick="processarCSV()" style="display:none">Qualificar todos</button>
+      <div id="improg" style="flex:1;display:none;min-width:200px">
+        <div class="prog-wrap"><div class="prog-bar" id="progbar" style="width:0%"></div></div>
+        <div style="font-size:12px;color:var(--tx2)" id="proglbl">Aguardando...</div>
+      </div>
+    </div>
+  </div>
+  <div id="impres" style="display:none">
+    <div class="g3" style="margin-bottom:1rem">
+      <div class="kpi"><div class="kpi-lbl">Total importado</div><div class="kpi-val" id="itotal">0</div></div>
+      <div class="kpi"><div class="kpi-lbl">Tutoria</div><div class="kpi-val" id="itut" style="color:var(--navy)">0</div></div>
+      <div class="kpi"><div class="kpi-lbl">Aceleradora</div><div class="kpi-val" id="iacel" style="color:var(--gold2)">0</div></div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:1rem 1.6rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bdr);flex-wrap:wrap;gap:.75rem">
+        <div style="font-size:14px;font-weight:500">Resultado — clique em "Analisar Lead" para ver detalhes individuais</div>
+        <button class="btn" onclick="adicionarTodos()">Adicionar todos ao pipeline</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="imp-table"><thead><tr><th>Nome</th><th>Faturamento</th><th>Formato preferido</th><th>Recomendação</th><th>Scores</th></tr></thead><tbody id="imptbody"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ANALISAR LEAD -->
+<div class="page" id="page-analisar">
+  <div class="phdr"><div><div class="ptitle">Analisar <em>Lead</em></div><div class="psub" id="anal-sub">Selecione um lead da lista para ver as respostas e analisar com IA</div></div></div>
+  <div class="anal-layout">
+    <!-- LISTA DE LEADS DO CSV -->
+    <div>
+      <input class="anal-search" type="text" id="anal-search" placeholder="Buscar lead..." oninput="renderPickList()">
+      <div id="pick-empty" style="display:none;text-align:center;padding:2rem;color:var(--tx2);font-size:13px;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r)">
+        <div style="font-size:28px;margin-bottom:8px;opacity:.3">📂</div>
+        Importe um CSV primeiro na aba<br>"Importar CSV"
+      </div>
+      <div class="lead-pick-list" id="pick-list"></div>
+    </div>
+    <!-- PAINEL DIREITO -->
+    <div class="anal-right" id="anal-right">
+      <div class="anal-empty" id="anal-placeholder">
+        <div style="text-align:center;color:var(--tx3)">
+          <div style="font-size:52px;margin-bottom:14px;opacity:.25">👈</div>
+          <div style="font-size:15px;font-weight:500;color:var(--tx2);margin-bottom:6px">Selecione um lead</div>
+          <div style="font-size:13px">Clique em um nome na lista ao lado</div>
+        </div>
+      </div>
+      <!-- RESPOSTAS DO LEAD SELECIONADO -->
+      <div id="anal-content" style="display:none">
+        <div class="resp-card" style="margin-bottom:1rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:.75rem">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div id="sel-av" style="width:42px;height:42px;border-radius:50%;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:var(--navy);border:1px solid var(--bdr)"></div>
+              <div>
+                <div id="sel-nome" style="font-size:16px;font-weight:500;color:var(--tx)"></div>
+                <div id="sel-insta" style="font-size:12px;color:var(--tx3);margin-top:2px"></div>
+              </div>
+            </div>
+            <button class="btn" id="btn-analisar-ia" onclick="analisarLeadSelecionado()">Analisar com IA</button>
+          </div>
+          <div id="sel-respostas"></div>
+        </div>
+        <!-- RESULTADO IA -->
+        <div id="ares" style="display:none">
+          <div class="sg">
+            <div class="sc"><div class="sc-lbl">Tutoria Hands-On</div><div class="sc-num" id="st" style="color:var(--navy)">—</div><div class="sb-bg"><div class="sb-fill" id="sbt" style="background:var(--navy);width:0%"></div></div></div>
+            <div class="sc"><div class="sc-lbl">Aceleradora PPV</div><div class="sc-num" id="sa" style="color:var(--gold2)">—</div><div class="sb-bg"><div class="sb-fill" id="sba" style="background:var(--gold);width:0%"></div></div></div>
+          </div>
+          <div id="recbox" style="margin-bottom:1rem"></div>
+          <div class="card">
+            <div class="card-title">Análise detalhada</div>
+            <div id="pontos" style="display:flex;flex-direction:column;gap:8px;margin-bottom:1rem"></div>
+            <div class="divider"></div>
+            <div class="abord"><div class="abord-lbl">Como abordar</div><div class="abord-text" id="abordtxt"></div></div>
+            <div style="margin-top:1rem;display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn" onclick="addLeadAnalisado()">Adicionar ao pipeline</button>
+              <button class="btn-out" onclick="proximoLead()">Próximo lead →</button>
+            </div>
+          </div>
+          <!-- OBJEÇÕES -->
+          <div id="objecoes-section" style="display:none;margin-top:1rem">
+            <div class="card">
+              <div class="card-title" style="color:var(--red)">Quebras de objeção</div>
+              <div id="objecoes-body"></div>
+            </div>
+          </div>
+          <!-- GATILHOS -->
+          <div id="gatilhos-section" style="display:none;margin-top:1rem">
+            <div class="card" style="border-top:3px solid var(--gold)">
+              <div class="card-title">Gatilhos para usar</div>
+              <div id="gatilhos-body"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIG -->
+<div class="page" id="page-config">
+  <div class="phdr"><div><div class="ptitle">Configurações</div><div class="psub">Conecte o Supabase para salvar dados na nuvem</div></div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+    <div class="cfg-card">
+      <div class="cfg-title">API Key do Claude <span style="background:#eaf3de;color:#27500A;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500;margin-left:6px">necessária para a IA funcionar</span></div>
+      <div class="cfg-sub">Acesse <a href="https://console.anthropic.com" target="_blank" style="color:var(--navy);font-weight:500">console.anthropic.com</a> → API Keys → Create Key. Cole aqui para ativar o analisador de leads.</div>
+      <div class="field"><label>Anthropic API Key</label><input type="password" id="claude-key" placeholder="sk-ant-..."></div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:.75rem;flex-wrap:wrap">
+        <button class="btn" onclick="salvarClaudeKey()">Salvar API Key</button>
+        <span id="claude-stat" style="font-size:13px;color:var(--tx2)"></span>
+      </div>
+      <div class="divider"></div>
+      <div class="cfg-title" style="margin-bottom:5px">Conexão Supabase</div>
+      <div class="cfg-sub">Cole as credenciais do seu projeto para ativar o banco de dados compartilhado entre você e a Lana.</div>
+      <div class="field"><label>Supabase URL</label><input type="text" id="sburl" placeholder="https://xxxxxxxxxxxx.supabase.co"></div>
+      <div class="field"><label>Supabase Anon Key</label><input type="text" id="sbkey" placeholder="eyJhbGci..."></div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:1rem;flex-wrap:wrap">
+        <button class="btn" onclick="salvarConfig()">Salvar e conectar</button>
+        <span id="cstat" style="font-size:13px;color:var(--tx2)"></span>
+      </div>
+    </div>
+    <div class="cfg-card">
+      <div class="cfg-title">Status</div>
+      <div style="margin-top:8px;font-size:14px;color:var(--tx2)"><span class="sdot" id="sdot" style="background:#ccc"></span><span id="stxt">Não configurado</span></div>
+      <div class="divider"></div>
+      <div style="font-size:13px;color:var(--tx2);line-height:1.9">
+        <strong style="color:var(--tx);display:block;margin-bottom:6px">Como configurar:</strong>
+        1. Acesse <a href="https://supabase.com" target="_blank" style="color:var(--navy);font-weight:500">supabase.com</a><br>
+        2. Vá em <strong style="color:var(--tx)">Settings → API</strong><br>
+        3. Copie a <strong style="color:var(--tx)">Project URL</strong><br>
+        4. Em <strong style="color:var(--tx)">Legacy anon keys</strong> copie a <strong style="color:var(--tx)">anon public</strong><br>
+        5. Cole ao lado e clique em Salvar
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- MODAL -->
+<div class="mov" id="modal">
+  <div class="modal">
+    <div class="modal-title">Novo lead</div>
+    <div class="field"><label>Nome</label><input id="fnom" type="text" placeholder="Ex: Fernanda Lima"></div>
+    <div class="fg2">
+      <div class="field"><label>WhatsApp</label><input id="fwhats" type="text" placeholder="Ex: 55 11 99999-9999"></div>
+      <div class="field"><label>Instagram</label><input id="finsta" type="text" placeholder="@usuario"></div>
+    </div>
+    <div class="fg2">
+      <div class="field"><label>Faturamento atual</label><input id="ffat" type="text" placeholder="Ex: Até R$10k"></div>
+      <div class="field"><label>Origem</label><select id="forig"><option>Instagram</option><option>YouTube</option><option>Desafio</option><option>Indicação</option><option>Stories</option><option>Respondi</option><option>Outro</option></select></div>
+    </div>
+    <div class="fg2">
+      <div class="field"><label>Etapa</label><select id="fetapa"><option value="novo">Novo</option><option value="qualificado">Qualificado</option><option value="aplicou">Aplicou</option><option value="negociacao">Negociação</option><option value="fechado">Fechado</option></select></div>
+      <div class="field"><label>Produto</label><select id="fprod"><option value="tutoria">Tutoria Hands-On</option><option value="aceleradora">Aceleradora PPV</option><option value="nenhum">Não qualificado</option></select></div>
+    </div>
+    <div class="field"><label>Principal motivação</label><select id="fmot"><option>Não sabe o que postar</option><option>Quer escalar o faturamento</option><option>Conteúdo não converte</option><option>Não sabe se posicionar</option><option>Outro</option></select></div>
+    <div class="field"><label>Valor (se fechado)</label><input id="fval" type="number" placeholder="0"></div>
+    <div class="mbtns"><button class="btn-cancel" onclick="fecharModal()">Cancelar</button><button class="btn" onclick="salvarLead()">Salvar lead</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const META=100000;
+const COR_M={'Não sabe o que postar':'#185FA5','Quer escalar o faturamento':'#854F0B','Conteúdo não converte':'#534AB7','Não sabe se posicionar':'#993C1D','Estruturar vendas':'#3B6D11','Outro':'#5F5E5A'};
+const RM={
+  nome:'Qual é o seu nome completo?',
+  email:'Qual é o seu melhor e-mail?',
+  whats:'Qual seu WhatsApp?',
+  insta:'Qual é o seu Instagram?',
+  fat:'Qual é seu faturamento médio mensal?',
+  vende:'Hoje você vende principalmente através de:',
+  precisa:'Hoje você precisa mais de:',
+  formato:'Hoje temos dois formatos de acompanhamento.',
+  investir:'Se fizer sentido para seu momento, você estaria disposto(a) a investir para acelerar suas vendas?',
+};
+
+let sb=null,leads=[],filtro='todos',csvRows=[],impRes=[],leadAnal=null,selectedIdx=-1;
+
+function toggleDrawer(){document.getElementById('drawer').classList.toggle('open')}
+
+// ── SUPABASE ─────────────────────────────────────────────
+function loadCfg(){
+  const url=localStorage.getItem('sb_url'),key=localStorage.getItem('sb_key');
+  const ck=localStorage.getItem('claude_key');
+  if(ck){document.getElementById('claude-key').value=ck;document.getElementById('claude-stat').textContent='API Key salva ✓';document.getElementById('claude-stat').style.color='var(--green)';}
+  if(url&&key){document.getElementById('sburl').value=url;document.getElementById('sbkey').value=key;initSB(url,key)}
+  else{setStatus(false,'Não configurado');fromLocal()}
+}
+function initSB(url,key){
+  try{sb=window.supabase.createClient(url,key);fetchLeads().then(()=>setStatus(true,'Conectado')).catch(()=>{setStatus(false,'Erro');fromLocal()})}
+  catch{setStatus(false,'Credenciais inválidas');fromLocal()}
+}
+async function fetchLeads(){
+  const{data,error}=await sb.from('leads_ppv').select('*').order('criado_em',{ascending:false});
+  if(error)throw error;leads=data||[];saveLocal();render();
+}
+async function insertLead(l){
+  if(!sb){leads.unshift({...l,id:Date.now()+Math.random().toString(36).slice(2)});saveLocal();render();return}
+  const{data,error}=await sb.from('leads_ppv').insert([l]).select();
+  if(error){leads.unshift({...l,id:Date.now().toString()});saveLocal();render();return}
+  leads.unshift(data[0]);saveLocal();render();
+}
+async function deleteLead(id){
+  if(!confirm('Remover este lead?'))return;
+  if(sb)await sb.from('leads_ppv').delete().eq('id',id);
+  leads=leads.filter(l=>l.id!==id);saveLocal();render();toast('Lead removido.');
+}
+function saveLocal(){localStorage.setItem('leads_ppv',JSON.stringify(leads))}
+function fromLocal(){leads=JSON.parse(localStorage.getItem('leads_ppv')||'[]');render()}
+function salvarConfig(){
+  const url=document.getElementById('sburl').value.trim(),key=document.getElementById('sbkey').value.trim();
+  if(!url||!key){toast('Preencha URL e Key','err');return}
+  localStorage.setItem('sb_url',url);localStorage.setItem('sb_key',key);
+  document.getElementById('cstat').textContent='Conectando...';initSB(url,key);
+}
+function setStatus(ok,msg){
+  document.getElementById('sdot').style.background=ok?'#639922':'#E24B4A';
+  document.getElementById('stxt').textContent=ok?'Conectado ✓':msg;
+  document.getElementById('cstat').textContent=ok?'Conectado ✓':msg;
+}
+
+// ── RENDER ───────────────────────────────────────────────
+function fmt(v){return'R$ '+Math.round(v).toLocaleString('pt-BR')}
+function render(){
+  const fech=leads.filter(l=>l.etapa==='fechado');
+  const fat=fech.reduce((s,l)=>s+(+l.valor||0),0);
+  const tut=fech.filter(l=>l.produto==='tutoria');
+  const acel=fech.filter(l=>l.produto==='aceleradora');
+  const tick=fech.length?fat/fech.length:0;
+  const pct=Math.min(100,Math.round(fat/META*100));
+  document.getElementById('nb').textContent=leads.length;
+  document.getElementById('tbfat').textContent=fmt(fat)+' faturado';
+  document.getElementById('vsub').textContent=`Método PPV · ${leads.length} leads · ${fech.length} vendas`;
+  document.getElementById('lsub').textContent=`${leads.length} leads cadastrados`;
+  document.getElementById('mval').textContent=fmt(fat);
+  document.getElementById('mpct').textContent=pct+'%';
+  document.getElementById('mfill').style.width=pct+'%';
+  document.getElementById('msub').textContent=fech.length+' vendas fechadas';
+  document.getElementById('mrest').textContent=(META-fat)>0?`Faltam ${fmt(META-fat)} para a meta`:'🎉 Meta atingida!';
+  document.getElementById('mtv').textContent=tut.length+' vendas';
+  document.getElementById('mtf').textContent=fmt(tut.reduce((s,l)=>s+(+l.valor||0),0));
+  document.getElementById('mav').textContent=acel.length+' vendas';
+  document.getElementById('maf').textContent=fmt(acel.reduce((s,l)=>s+(+l.valor||0),0));
+  document.getElementById('kfat').textContent=fmt(fat);
+  document.getElementById('kvend').textContent=fech.length;
+  document.getElementById('ktick').textContent=fmt(tick);
+  document.getElementById('ktleads').textContent=leads.length;
+  [['novo','pcn','pvn'],['qualificado','pcq','pvq'],['aplicou','pca','pva'],['negociacao','pcng','pvng'],['fechado','pcf','pvf']].forEach(([e,cn,vn])=>{
+    const ls=leads.filter(l=>l.etapa===e);
+    document.getElementById(cn).textContent=ls.length;
+    const v=ls.reduce((s,l)=>s+(+l.valor||0),0);
+    document.getElementById(vn).textContent=v>0?fmt(v):'—';
+  });
+  const prods=[{n:'Tutoria Hands-On',fat:tut.reduce((s,l)=>s+(+l.valor||0),0),cnt:tut.length,c:'var(--navy)'},{n:'Aceleradora PPV',fat:acel.reduce((s,l)=>s+(+l.valor||0),0),cnt:acel.length,c:'var(--gold)'}];
+  const mxP=Math.max(...prods.map(p=>p.fat),1);
+  document.getElementById('rprod').innerHTML=prods.map(p=>`<div class="rank-item"><div class="rank-row"><span class="rank-name">${p.n}</span><span class="rank-info">${p.cnt}x · ${fmt(p.fat)}</span></div><div class="rank-bg"><div class="rank-bar" style="width:${Math.round(p.fat/mxP*100)}%;background:${p.c}"></div></div></div>`).join('');
+  const om={};leads.forEach(l=>{if(l.origem)om[l.origem]=(om[l.origem]||0)+1});
+  const ori=Object.entries(om).sort((a,b)=>b[1]-a[1]);
+  const mxO=Math.max(...ori.map(o=>o[1]),1);
+  const cO=['#185FA5','#534AB7','#854F0B','#3B6D11','#993C1D'];
+  document.getElementById('rorig').innerHTML=ori.length?ori.map((o,i)=>`<div class="rank-item"><div class="rank-row"><span class="rank-name">${o[0]}</span><span class="rank-info">${o[1]}</span></div><div class="rank-bg"><div class="rank-bar" style="width:${Math.round(o[1]/mxO*100)}%;background:${cO[i%cO.length]}"></div></div></div>`).join(''):'<div class="empty" style="padding:.5rem 0;font-size:12px">—</div>';
+  const mm={};leads.forEach(l=>{if(l.motivo)mm[l.motivo]=(mm[l.motivo]||0)+1});
+  const mot=Object.entries(mm).sort((a,b)=>b[1]-a[1]);
+  const mxM=Math.max(...mot.map(m=>m[1]),1);
+  document.getElementById('rmot').innerHTML=mot.length?mot.map(m=>`<div class="rank-item"><div class="rank-row"><span class="rank-name">${m[0]}</span><span class="rank-info">${m[1]}</span></div><div class="rank-bg"><div class="rank-bar" style="width:${Math.round(m[1]/mxM*100)}%;background:${COR_M[m[0]]||'#888'}"></div></div></div>`).join(''):'<div class="empty" style="padding:.5rem 0;font-size:12px">—</div>';
+  renderLeads();
+}
+
+function renderLeads(){
+  const q=(document.getElementById('search')?.value||'').toLowerCase();
+  let fl=filtro==='todos'?leads:leads.filter(l=>l.produto===filtro);
+  if(q)fl=fl.filter(l=>l.nome&&l.nome.toLowerCase().includes(q));
+  const el=document.getElementById('leads-body');
+  if(!fl.length){el.innerHTML='<div class="empty"><div class="empty-icon">👤</div>Nenhum lead encontrado.</div>';return}
+  el.innerHTML=fl.map(l=>{
+    const nome=l.nome||'Sem nome';
+    const ini=nome.split(' ').slice(0,2).map(n=>n[0]||'').join('').toUpperCase()||'?';
+    const avC=l.produto==='tutoria'?'av-t':l.produto==='aceleradora'?'av-a':'av-n';
+    const pC=l.produto==='tutoria'?'pill-t':l.produto==='aceleradora'?'pill-a':'pill-n';
+    const pL=l.produto==='tutoria'?'Tutoria':l.produto==='aceleradora'?'Aceleradora':'—';
+    const eC=`e-${l.etapa||'novo'}`;
+    const eL={novo:'Novo',qualificado:'Qualificado',aplicou:'Aplicou',negociacao:'Negociação',fechado:'Fechado'}[l.etapa]||'Novo';
+    const mc=COR_M[l.motivo]||'#888';
+    const wlink=l.whatsapp&&l.whatsapp!=='—'?`<a href="https://wa.me/${l.whatsapp.replace(/\D/g,'')}" target="_blank" style="font-size:12px;color:var(--blue);text-decoration:none;white-space:nowrap">${l.whatsapp}</a>`:'<span style="color:var(--tx3);font-size:12px">—</span>';
+    return`<div class="t-row"><div style="display:flex;align-items:center"><div class="lav ${avC}">${ini}</div><div><div class="lname">${nome}</div><div class="lsub">${l.faturamento||'—'}</div></div></div><div><span class="pill ${pC}">${pL}</span></div><div><span class="ep ${eC}">${eL}</span></div><div>${l.motivo&&l.motivo!=='Outro'?`<span class="mchip" style="background:${mc}18;color:${mc};border:0.5px solid ${mc}50">${l.motivo}</span>`:'<span style="color:var(--tx3);font-size:12px">—</span>'}</div><div>${wlink}</div><div style="font-size:12px;color:var(--tx2)">${l.origem||'—'}</div><div><button class="delbtn" onclick="deleteLead('${l.id}')">✕</button></div></div>`;
+  }).join('');
+}
+
+function setFiltro(t,el){filtro=t;document.querySelectorAll('.filt').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderLeads()}
+
+// ── PICK LIST ─────────────────────────────────────────────
+function renderPickList(){
+  const q=(document.getElementById('anal-search')?.value||'').toLowerCase();
+  const validos=csvRows.filter(r=>r[RM.nome]&&r[RM.nome].trim()&&!r[RM.nome].toLowerCase().includes('preço'));
+  const filtrados=q?validos.filter(r=>r[RM.nome].toLowerCase().includes(q)):validos;
+  const empty=document.getElementById('pick-empty');
+  const list=document.getElementById('pick-list');
+  if(!validos.length){empty.style.display='block';list.innerHTML='';return}
+  empty.style.display='none';
+  list.innerHTML=filtrados.map((r,i)=>{
+    const nome=r[RM.nome]||'Lead';
+    const ini=nome.split(' ').slice(0,2).map(n=>n[0]||'').join('').toUpperCase();
+    const fat=r[RM.fat]||'—';
+    const formato=r[RM.formato]||'';
+    const isInd=formato.toLowerCase().includes('individual');
+    const isGrp=formato.toLowerCase().includes('grupo');
+    const badge=isInd?`<span class="pill pill-t" style="font-size:10px">Tutoria</span>`:isGrp?`<span class="pill pill-a" style="font-size:10px">Aceleradora</span>`:'';
+    const realIdx=csvRows.indexOf(r);
+    return`<div class="lead-pick-item ${selectedIdx===realIdx?'selected':''}" onclick="selecionarLead(${realIdx})">
+      <div class="lead-pick-av">${ini}</div>
+      <div style="flex:1;min-width:0">
+        <div class="lead-pick-name">${nome}</div>
+        <div class="lead-pick-sub">${fat}</div>
+      </div>
+      <div class="lead-pick-badge">${badge}</div>
+    </div>`;
+  }).join('');
+}
+
+function selecionarLead(idx){
+  selectedIdx=idx;
+  const row=csvRows[idx];
+  if(!row)return;
+  renderPickList();
+  leadAnal=null;
+  document.getElementById('ares').style.display='none';
+  document.getElementById('anal-placeholder').style.display='none';
+  document.getElementById('anal-content').style.display='block';
+  const nome=row[RM.nome]||'Lead';
+  const ini=nome.split(' ').slice(0,2).map(n=>n[0]||'').join('').toUpperCase();
+  document.getElementById('sel-av').textContent=ini;
+  document.getElementById('sel-nome').textContent=nome;
+  document.getElementById('sel-insta').textContent=row[RM.insta]||row[RM.email]||'';
+  const campos=[
+    {q:'WhatsApp',v:row[RM.whats]},
+    {q:'Faturamento médio mensal',v:row[RM.fat]},
+    {q:'Vende principalmente através de',v:row[RM.vende]},
+    {q:'Precisa mais de',v:row[RM.precisa]},
+    {q:'Formato preferido',v:row[RM.formato]},
+    {q:'Disponibilidade de investir',v:row[RM.investir]},
+  ].filter(c=>c.v&&c.v.trim());
+  document.getElementById('sel-respostas').innerHTML=campos.map(c=>{
+    const isWhats=c.q==='WhatsApp';
+    const val=isWhats?`<a href="https://wa.me/${c.v.replace(/\D/g,'')}" target="_blank" style="color:var(--blue);font-weight:500;text-decoration:none">📱 ${c.v} — abrir WhatsApp</a>`:c.v;
+    return`<div class="resp-row"><div class="resp-q">${c.q}</div><div class="resp-a">${val}</div></div>`;
+  }).join('');
   document.getElementById('btn-analisar-ia').innerHTML='Analisar com IA';
   document.getElementById('btn-analisar-ia').disabled=false;
 }
