@@ -1,0 +1,573 @@
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.app{font-family:'DM Sans',sans-serif;max-width:860px;margin:0 auto;padding:0 0 2rem}
+.hdr{background:#0C1130;border-radius:16px;padding:1.4rem 1.75rem;margin-bottom:1.25rem}
+.hdr-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.1rem}
+.hdr-label{font-size:11px;letter-spacing:1.2px;color:#8a93b8;text-transform:uppercase;margin-bottom:3px}
+.hdr-title{font-family:'Playfair Display',serif;font-size:24px;color:#F0EAD8;font-weight:500;line-height:1.2}
+.hdr-title em{color:#C9A84C;font-style:italic}
+.hdr-sub{font-size:12px;color:#6b75a0;margin-top:3px}
+.hdr-right{text-align:right}
+.hdr-count{font-size:13px;color:#F0EAD8;font-weight:500}
+.hdr-sub2{font-size:11px;color:#6b75a0;margin-top:2px}
+.nav{display:flex;gap:4px;background:#0a0f27;border-radius:10px;padding:4px}
+.ntab{flex:1;padding:7px 10px;font-size:12px;font-family:'DM Sans',sans-serif;background:none;border:none;color:#8a93b8;cursor:pointer;border-radius:7px;transition:all .15s;text-align:center}
+.ntab.active{background:#F0EAD8;color:#0C1130;font-weight:500}
+.ntab:hover:not(.active){color:#c0c8e0}
+.page{display:none}
+.page.active{display:block}
+.sec-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;padding:0 2px}
+.section{margin-bottom:1.25rem}
+.kpi3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.kpi2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kpi{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:12px;padding:.9rem 1.1rem;position:relative;overflow:hidden}
+.kpi-accent{position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0}
+.kpi-lbl{font-size:11px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px;margin-top:2px}
+.kpi-val{font-family:'Playfair Display',serif;font-size:20px;color:var(--color-text-primary);font-weight:500;line-height:1.1}
+.kpi-sub{font-size:11px;color:var(--color-text-secondary);margin-top:3px}
+.meta-card{background:#0C1130;border-radius:12px;padding:1rem 1.25rem;margin-bottom:10px}
+.meta-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.meta-lbl{font-size:11px;color:#8a93b8;text-transform:uppercase;letter-spacing:.8px}
+.meta-pct{font-size:13px;font-weight:500;color:#C9A84C}
+.meta-vals{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.meta-atual{font-family:'Playfair Display',serif;font-size:22px;color:#F0EAD8;font-weight:500}
+.meta-target{font-size:12px;color:#6b75a0}
+.meta-bar-bg{background:#1a2448;border-radius:6px;height:5px;overflow:hidden}
+.meta-bar-fill{height:5px;background:#C9A84C;border-radius:6px;width:0%;transition:width .8s ease}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:12px;padding:1rem 1.25rem;margin-bottom:10px}
+.card-title{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+.rank-item{margin-bottom:10px}
+.rank-item:last-child{margin-bottom:0}
+.rank-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.rank-name{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+.rank-info{font-size:11px;color:var(--color-text-secondary)}
+.rank-bar-bg{background:var(--color-background-secondary);border-radius:4px;height:5px;overflow:hidden}
+.rank-bar{height:5px;border-radius:4px;transition:width .8s ease}
+.pipe-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.pipe-col{background:var(--color-background-secondary);border-radius:10px;padding:10px 8px}
+.pipe-col-hdr{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.6px;color:var(--color-text-secondary);margin-bottom:5px;text-align:center}
+.pipe-count{text-align:center;font-family:'Playfair Display',serif;font-size:18px;font-weight:500;color:var(--color-text-primary)}
+.pipe-val{text-align:center;font-size:10px;color:var(--color-text-secondary);margin-top:1px}
+.pipe-dot{width:7px;height:7px;border-radius:50%;margin:6px auto 0}
+.three-col{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.lead-tabs{display:flex;border-bottom:0.5px solid var(--color-border-tertiary)}
+.ltab{flex:1;padding:9px 6px;font-size:12px;font-family:'DM Sans',sans-serif;background:none;border:none;color:var(--color-text-secondary);cursor:pointer;transition:all .15s;font-weight:400}
+.ltab.active{color:var(--color-text-primary);font-weight:500;border-bottom:2px solid #0C1130}
+.lead-item{display:flex;align-items:center;gap:10px;padding:9px 11px;background:var(--color-background-secondary);border-radius:10px}
+.lead-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0}
+.av-t{background:#0C113018;color:#0C1130}
+.av-a{background:#C9A84C22;color:#946e1a}
+.av-n{background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-secondary)}
+.lead-name{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.lead-fat{font-size:11px;color:var(--color-text-secondary);margin-top:1px}
+.pill{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:500;flex-shrink:0}
+.pill-t{background:#0C113018;color:#0C1130}
+.pill-a{background:#C9A84C22;color:#946e1a}
+.pill-n{background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-secondary)}
+.motivo-chip{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:500;margin-top:3px}
+.btn-primary{background:#0C1130;color:#F0EAD8;border:none;border-radius:8px;padding:9px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .15s;display:inline-flex;align-items:center;gap:7px}
+.btn-primary:hover{opacity:.85}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-outline{background:none;border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary);border-radius:8px;padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .15s}
+.btn-outline:hover{background:var(--color-background-secondary);color:var(--color-text-primary)}
+.empty{text-align:center;padding:1.5rem;color:var(--color-text-secondary);font-size:13px}
+.upload-area{border:1.5px dashed var(--color-border-secondary);border-radius:12px;padding:1.75rem;text-align:center;cursor:pointer;transition:all .2s;background:var(--color-background-secondary)}
+.upload-area:hover{border-color:#0C1130;background:#0C113008}
+.upload-title{font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.upload-sub{font-size:12px;color:var(--color-text-secondary)}
+.upload-sub span{color:#0C1130;font-weight:500;cursor:pointer;text-decoration:underline}
+.file-info{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--color-background-secondary);border-radius:10px;border:0.5px solid var(--color-border-tertiary);margin-top:10px}
+.prog-wrap{background:var(--color-border-tertiary);border-radius:6px;height:5px;overflow:hidden;margin:10px 0 5px}
+.prog-bar{height:5px;background:#0C1130;border-radius:6px;transition:width .4s ease}
+.prog-label{font-size:12px;color:var(--color-text-secondary)}
+.score-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.score-card{background:var(--color-background-secondary);border-radius:10px;padding:.85rem 1rem}
+.score-lbl{font-size:11px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px}
+.score-num{font-family:'Playfair Display',serif;font-size:22px;font-weight:500}
+.score-mini-bar{background:var(--color-border-tertiary);border-radius:3px;height:4px;margin-top:6px;overflow:hidden}
+.score-mini-fill{height:4px;border-radius:3px;transition:width .7s ease}
+.rec-box{border-radius:10px;padding:1rem 1.1rem;margin-bottom:10px}
+.rec-box-t{background:#0C113012;border:1.5px solid #0C1130}
+.rec-box-a{background:#C9A84C12;border:1.5px solid #C9A84C}
+.rec-box-n{background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary)}
+.rec-tag{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.rec-title{font-size:15px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.rec-reason{font-size:12px;color:var(--color-text-secondary);line-height:1.6}
+.abord-box{background:#0C113008;border-left:3px solid #0C1130;border-radius:0 8px 8px 0;padding:10px 12px}
+.abord-lbl{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.8px;color:#0C1130;margin-bottom:5px}
+.abord-text{font-size:12px;color:var(--color-text-primary);line-height:1.65;font-style:italic}
+.import-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+.import-table th{text-align:left;padding:7px 10px;font-size:10px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.6px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.import-table td{padding:8px 10px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:middle}
+.import-table tr:last-child td{border-bottom:none}
+.import-table tr:hover td{background:var(--color-background-secondary)}
+.col-n{width:30%}.col-r{width:22%}.col-s{width:18%}.col-o{width:30%}
+.ldots span{width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block;animation:blink 1.2s infinite}
+.ldots span:nth-child(2){animation-delay:.2s}
+.ldots span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.modal-bg{display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(12,17,48,.75);border-radius:16px;z-index:10;align-items:flex-start;justify-content:center;padding:1.5rem 1rem}
+.modal-bg.open{display:flex}
+.modal{background:var(--color-background-primary);border-radius:14px;padding:1.25rem 1.5rem;width:100%;max-width:420px}
+.modal-title{font-size:15px;font-weight:500;color:var(--color-text-primary);margin-bottom:1rem}
+.field{margin-bottom:9px}
+.field label{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--color-text-secondary);display:block;margin-bottom:3px}
+.field input,.field select{width:100%;padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:8px;font-size:13px;color:var(--color-text-primary);background:var(--color-background-secondary);font-family:'DM Sans',sans-serif;outline:none}
+.field input:focus,.field select:focus{border-color:#0C1130}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.modal-btns{display:flex;gap:8px;margin-top:1rem;justify-content:flex-end}
+.btn-cancel{background:none;border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary);border-radius:8px;padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer}
+.btn-save{background:#0C1130;color:#F0EAD8;border:none;border-radius:8px;padding:7px 16px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer}
+.badge-ia{background:#C9A84C22;border:1px solid #C9A84C55;color:#C9A84C;font-size:10px;padding:3px 8px;border-radius:20px;font-weight:500}
+</style>
+
+<div class="app" id="app" style="position:relative">
+
+<div class="hdr">
+  <div class="hdr-top">
+    <div>
+      <div class="hdr-label">Setor Comercial · Método PPV</div>
+      <div class="hdr-title">Dashboard de <em>Vendas</em></div>
+      <div class="hdr-sub">Março 2026</div>
+    </div>
+    <div class="hdr-right">
+      <div class="hdr-count" id="hdr-count">0 leads</div>
+      <div class="hdr-sub2" id="hdr-fat">R$ 0 faturado</div>
+    </div>
+  </div>
+  <div class="nav">
+    <button class="ntab active" onclick="goPage('visao',this)">Visão geral</button>
+    <button class="ntab" onclick="goPage('leads',this)">Leads</button>
+    <button class="ntab" onclick="goPage('importar',this)">Importar CSV <span class="badge-ia">IA</span></button>
+    <button class="ntab" onclick="goPage('analisar',this)">Analisar lead <span class="badge-ia">IA</span></button>
+  </div>
+</div>
+
+<!-- PAGE: VISÃO GERAL -->
+<div class="page active" id="page-visao">
+  <div class="section">
+    <div class="meta-card">
+      <div class="meta-top"><div class="meta-lbl">Meta do mês</div><div class="meta-pct" id="meta-pct">0%</div></div>
+      <div class="meta-vals"><div class="meta-atual" id="meta-atual">R$ 0</div><div class="meta-target">meta: R$ 100.000</div></div>
+      <div class="meta-bar-bg"><div class="meta-bar-fill" id="meta-bar"></div></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="sec-label">Números</div>
+    <div class="kpi3">
+      <div class="kpi"><div class="kpi-accent" style="background:#C9A84C"></div><div class="kpi-lbl">Faturamento</div><div class="kpi-val" id="kpi-fat">R$ 0</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:#0C1130"></div><div class="kpi-lbl">Vendas fechadas</div><div class="kpi-val" id="kpi-vendas">0</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:#3B6D11"></div><div class="kpi-lbl">Ticket médio</div><div class="kpi-val" id="kpi-ticket">R$ 0</div></div>
+    </div>
+    <div style="margin-top:10px" class="kpi2">
+      <div class="kpi"><div class="kpi-lbl">Tutoria Hands-On</div><div class="kpi-val" id="kpi-tv">0 vendas</div><div class="kpi-sub" id="kpi-tf">R$ 0</div></div>
+      <div class="kpi"><div class="kpi-lbl">Aceleradora PPV</div><div class="kpi-val" id="kpi-av">0 vendas</div><div class="kpi-sub" id="kpi-af">R$ 0</div></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="sec-label">Pipeline</div>
+    <div class="pipe-grid">
+      <div class="pipe-col"><div class="pipe-col-hdr">Novo</div><div class="pipe-count" id="pc-novo">0</div><div class="pipe-val" id="pv-novo">—</div><div class="pipe-dot" style="background:#C9A84C"></div></div>
+      <div class="pipe-col"><div class="pipe-col-hdr">Qualif.</div><div class="pipe-count" id="pc-qual">0</div><div class="pipe-val" id="pv-qual">—</div><div class="pipe-dot" style="background:#378ADD"></div></div>
+      <div class="pipe-col"><div class="pipe-col-hdr">Aplicou</div><div class="pipe-count" id="pc-aplic">0</div><div class="pipe-val" id="pv-aplic">—</div><div class="pipe-dot" style="background:#7F77DD"></div></div>
+      <div class="pipe-col"><div class="pipe-col-hdr">Negoc.</div><div class="pipe-count" id="pc-neg">0</div><div class="pipe-val" id="pv-neg">—</div><div class="pipe-dot" style="background:#EF9F27"></div></div>
+      <div class="pipe-col"><div class="pipe-col-hdr">Fechado</div><div class="pipe-count" id="pc-fech">0</div><div class="pipe-val" id="pv-fech">—</div><div class="pipe-dot" style="background:#639922"></div></div>
+    </div>
+  </div>
+  <div class="three-col section">
+    <div>
+      <div class="sec-label">Por produto</div>
+      <div class="card" style="margin-bottom:0"><div class="card-title">Faturamento</div><div id="rank-produtos"><div class="empty" style="padding:.5rem 0">—</div></div></div>
+    </div>
+    <div>
+      <div class="sec-label">Origem</div>
+      <div class="card" style="margin-bottom:0"><div class="card-title">De onde vêm</div><div id="rank-origens"><div class="empty" style="padding:.5rem 0">—</div></div></div>
+    </div>
+    <div>
+      <div class="sec-label">Motivações</div>
+      <div class="card" style="margin-bottom:0;border-top:3px solid #C9A84C"><div class="card-title">Por que buscam</div><div id="rank-motivos"><div class="empty" style="padding:.5rem 0">—</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: LEADS -->
+<div class="page" id="page-leads">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div class="sec-label" style="margin-bottom:0">Todos os leads</div>
+    <button class="btn-primary" onclick="abrirModal()">+ Novo lead</button>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="lead-tabs">
+      <button class="ltab active" onclick="filtrarLeads('todos',this)">Todos</button>
+      <button class="ltab" onclick="filtrarLeads('tutoria',this)">Tutoria</button>
+      <button class="ltab" onclick="filtrarLeads('aceleradora',this)">Aceleradora</button>
+      <button class="ltab" onclick="filtrarLeads('nenhum',this)">Não qualif.</button>
+    </div>
+    <div style="padding:10px;display:flex;flex-direction:column;gap:6px" id="leads-lista"><div class="empty">Nenhum lead ainda.</div></div>
+  </div>
+</div>
+
+<!-- PAGE: IMPORTAR CSV -->
+<div class="page" id="page-importar">
+  <div class="sec-label">Importar respostas do Respondi</div>
+  <div class="card">
+    <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.style.borderColor='#0C1130'" ondragleave="this.style.borderColor=''" ondrop="handleDrop(event)">
+      <div style="font-size:20px;margin-bottom:6px">📄</div>
+      <div class="upload-title">Arraste o CSV aqui</div>
+      <div class="upload-sub">ou <span onclick="event.stopPropagation();document.getElementById('file-input').click()">clique para selecionar</span></div>
+    </div>
+    <input type="file" id="file-input" accept=".csv" style="display:none" onchange="handleFile(event)">
+    <div id="file-info-box"></div>
+    <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+      <button class="btn-outline" onclick="carregarDemo()">usar dados de exemplo</button>
+      <span style="font-size:12px;color:var(--color-text-secondary)">sem CSV agora? teste aqui</span>
+    </div>
+    <div id="col-map-area" style="display:none;margin-top:1rem">
+      <div class="sec-label">Mapear colunas</div>
+      <div id="col-map-fields" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+      <button class="btn-primary" id="btn-proc" onclick="processarCSV()" style="display:none">Qualificar com IA</button>
+      <div id="import-prog" style="flex:1;display:none">
+        <div class="prog-wrap"><div class="prog-bar" id="prog-bar" style="width:0%"></div></div>
+        <div class="prog-label" id="prog-label">Aguardando...</div>
+      </div>
+    </div>
+  </div>
+  <div id="import-results" style="display:none">
+    <div class="kpi3" style="margin-bottom:10px">
+      <div class="kpi"><div class="kpi-lbl">Total importado</div><div class="kpi-val" id="imp-total">0</div></div>
+      <div class="kpi"><div class="kpi-lbl">Tutoria</div><div class="kpi-val" id="imp-t" style="color:#0C1130">0</div></div>
+      <div class="kpi"><div class="kpi-lbl">Aceleradora</div><div class="kpi-val" id="imp-a" style="color:#C9A84C">0</div></div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:.75rem 1rem;display:flex;justify-content:space-between;align-items:center;border-bottom:0.5px solid var(--color-border-tertiary)">
+        <div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">Resultado da qualificação</div>
+        <button class="btn-primary" id="btn-add-all" onclick="adicionarTodos()">Adicionar todos ao pipeline</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="import-table">
+          <thead><tr><th class="col-n">Nome</th><th class="col-r">Recomendação</th><th class="col-s">Scores</th><th class="col-o">Motivo</th></tr></thead>
+          <tbody id="import-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: ANALISAR LEAD -->
+<div class="page" id="page-analisar">
+  <div class="sec-label">Análise individual</div>
+  <div class="card">
+    <div class="field"><label>Nome do lead</label><input id="a-nome" type="text" placeholder="Ex: Camila Souza"></div>
+    <div class="field"><label>Respostas do formulário</label>
+      <textarea id="a-resp" style="width:100%;min-height:140px;border:0.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--color-text-primary);background:var(--color-background-secondary);resize:vertical;outline:none;line-height:1.6" placeholder="Cole aqui as respostas do Respondi...
+
+Ex:
+Faturamento atual: R$3.000/mês
+Quanto quer faturar: R$15.000/mês
+Já vende / tem produto: Sim, mentora de carreira
+Tempo criando conteúdo: 1 ano"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn-primary" id="btn-analisar" onclick="analisarLead()">Analisar com IA</button>
+      <button class="btn-outline" onclick="preencherExemplo()">ver exemplo</button>
+    </div>
+  </div>
+  <div id="analise-result" style="display:none">
+    <div class="score-row">
+      <div class="score-card"><div class="score-lbl">Tutoria Hands-On</div><div class="score-num" id="s-t" style="color:#0C1130">—</div><div class="score-mini-bar"><div class="score-mini-fill" id="sb-t" style="background:#0C1130;width:0%"></div></div></div>
+      <div class="score-card"><div class="score-lbl">Aceleradora PPV</div><div class="score-num" id="s-a" style="color:#C9A84C">—</div><div class="score-mini-bar"><div class="score-mini-fill" id="sb-a" style="background:#C9A84C;width:0%"></div></div></div>
+    </div>
+    <div id="rec-container"></div>
+    <div class="card">
+      <div class="card-title">Pontos do lead</div>
+      <div id="pontos-grid" style="display:flex;flex-direction:column;gap:6px"></div>
+      <div style="border-top:0.5px solid var(--color-border-tertiary);margin:12px 0"></div>
+      <div class="abord-box"><div class="abord-lbl">Como abordar</div><div class="abord-text" id="abord-text"></div></div>
+      <div style="margin-top:12px">
+        <button class="btn-primary" id="btn-add-lead" onclick="adicionarLeadAnalisado()">Adicionar ao pipeline</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVO LEAD -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-title">Novo lead</div>
+    <div class="field"><label>Nome</label><input id="f-nome" type="text" placeholder="Ex: Fernanda Lima"></div>
+    <div class="g2">
+      <div class="field"><label>Faturamento</label><input id="f-fat" type="text" placeholder="Ex: R$3.000"></div>
+      <div class="field"><label>Origem</label><select id="f-origem"><option>Instagram</option><option>YouTube</option><option>Desafio</option><option>Indicação</option><option>Stories</option><option>Outro</option></select></div>
+    </div>
+    <div class="g2">
+      <div class="field"><label>Etapa</label><select id="f-etapa"><option value="novo">Novo</option><option value="qualificado">Qualificado</option><option value="aplicou">Aplicou</option><option value="negociacao">Negociação</option><option value="fechado">Fechado</option></select></div>
+      <div class="field"><label>Produto</label><select id="f-produto"><option value="tutoria">Tutoria Hands-On</option><option value="aceleradora">Aceleradora PPV</option><option value="nenhum">Não qualificado</option></select></div>
+    </div>
+    <div class="field"><label>Motivação</label><select id="f-motivo"><option>Não sabe o que postar</option><option>Quer escalar o faturamento</option><option>Conteúdo não converte</option><option>Não sabe se posicionar</option><option>Outro</option></select></div>
+    <div class="field"><label>Valor (se fechado)</label><input id="f-valor" type="number" placeholder="0"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-save" onclick="salvarLead()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const META=100000;
+const COR_M={'Não sabe o que postar':'#378ADD','Quer escalar o faturamento':'#C9A84C','Conteúdo não converte':'#7F77DD','Não sabe se posicionar':'#D85A30','Outro':'#888780'};
+let leads=[
+  {nome:'Raquel Nunes',faturamento:'R$12.000',origem:'Indicação',etapa:'fechado',produto:'tutoria',motivo:'Quer escalar o faturamento',valor:5000},
+  {nome:'Tais Oliveira',faturamento:'R$1.500',origem:'Stories',etapa:'fechado',produto:'aceleradora',motivo:'Não sabe se posicionar',valor:2500},
+  {nome:'Fernanda Lima',faturamento:'R$6.000',origem:'YouTube',etapa:'fechado',produto:'tutoria',motivo:'Conteúdo não converte',valor:5000},
+  {nome:'Camila Souza',faturamento:'R$3.500',origem:'Instagram',etapa:'negociacao',produto:'tutoria',motivo:'Quer escalar o faturamento',valor:0},
+  {nome:'Juliana Torres',faturamento:'R$8.000',origem:'Desafio',etapa:'aplicou',produto:'aceleradora',motivo:'Conteúdo não converte',valor:0},
+  {nome:'Marina Costa',faturamento:'R$0',origem:'Instagram',etapa:'novo',produto:'nenhum',motivo:'Não sabe o que postar',valor:0},
+];
+let filtroLead='todos';
+let csvLeads=[];
+let csvColunas=[];
+let csvMapa={nome:'',faturamento:'',meta:'',produto:'',tempo:''};
+let leadAnalisado=null;
+
+function fmt(v){return 'R$ '+Math.round(v).toLocaleString('pt-BR')}
+
+function render(){
+  const fech=leads.filter(l=>l.etapa==='fechado');
+  const fat=fech.reduce((s,l)=>s+(l.valor||0),0);
+  const tut=fech.filter(l=>l.produto==='tutoria');
+  const acel=fech.filter(l=>l.produto==='aceleradora');
+  const ticket=fech.length?fat/fech.length:0;
+  const pct=Math.min(100,Math.round((fat/META)*100));
+  document.getElementById('hdr-count').textContent=leads.length+' leads';
+  document.getElementById('hdr-fat').textContent=fmt(fat)+' faturado';
+  document.getElementById('meta-atual').textContent=fmt(fat);
+  document.getElementById('meta-pct').textContent=pct+'%';
+  document.getElementById('meta-bar').style.width=pct+'%';
+  document.getElementById('kpi-fat').textContent=fmt(fat);
+  document.getElementById('kpi-vendas').textContent=fech.length;
+  document.getElementById('kpi-ticket').textContent=fmt(ticket);
+  document.getElementById('kpi-tv').textContent=tut.length+' vendas';
+  document.getElementById('kpi-tf').textContent=fmt(tut.reduce((s,l)=>s+l.valor,0));
+  document.getElementById('kpi-av').textContent=acel.length+' vendas';
+  document.getElementById('kpi-af').textContent=fmt(acel.reduce((s,l)=>s+l.valor,0));
+  [['novo','novo'],['qualificado','qual'],['aplicou','aplic'],['negociacao','neg'],['fechado','fech']].forEach(([e,id])=>{
+    const ls=leads.filter(l=>l.etapa===e);
+    document.getElementById('pc-'+id).textContent=ls.length;
+    const v=ls.reduce((s,l)=>s+(l.valor||0),0);
+    document.getElementById('pv-'+id).textContent=v>0?fmt(v):'—';
+  });
+  const prods=[{nome:'Tutoria Hands-On',fat:tut.reduce((s,l)=>s+l.valor,0),n:tut.length,cor:'#0C1130'},{nome:'Aceleradora PPV',fat:acel.reduce((s,l)=>s+l.valor,0),n:acel.length,cor:'#C9A84C'}];
+  const maxP=Math.max(...prods.map(p=>p.fat),1);
+  document.getElementById('rank-produtos').innerHTML=prods.map(p=>`<div class="rank-item"><div class="rank-top"><span class="rank-name">${p.nome}</span><span class="rank-info">${p.n}x · ${fmt(p.fat)}</span></div><div class="rank-bar-bg"><div class="rank-bar" style="width:${Math.round(p.fat/maxP*100)}%;background:${p.cor}"></div></div></div>`).join('');
+  const om={};leads.forEach(l=>{om[l.origem]=(om[l.origem]||0)+1});
+  const ori=Object.entries(om).sort((a,b)=>b[1]-a[1]);
+  const maxO=Math.max(...ori.map(o=>o[1]),1);
+  const cO=['#378ADD','#7F77DD','#EF9F27','#639922','#D85A30'];
+  document.getElementById('rank-origens').innerHTML=ori.map((o,i)=>`<div class="rank-item"><div class="rank-top"><span class="rank-name">${o[0]}</span><span class="rank-info">${o[1]}</span></div><div class="rank-bar-bg"><div class="rank-bar" style="width:${Math.round(o[1]/maxO*100)}%;background:${cO[i%cO.length]}"></div></div></div>`).join('');
+  const mm={};leads.forEach(l=>{if(l.motivo)mm[l.motivo]=(mm[l.motivo]||0)+1});
+  const mot=Object.entries(mm).sort((a,b)=>b[1]-a[1]);
+  const maxM=Math.max(...mot.map(m=>m[1]),1);
+  document.getElementById('rank-motivos').innerHTML=mot.length?mot.map(m=>`<div class="rank-item"><div class="rank-top"><span class="rank-name">${m[0]}</span><span class="rank-info">${m[1]}</span></div><div class="rank-bar-bg"><div class="rank-bar" style="width:${Math.round(m[1]/maxM*100)}%;background:${COR_M[m[0]]||'#888'}"></div></div></div>`).join(''):'<div class="empty" style="padding:.5rem 0">—</div>';
+  renderLeads();
+}
+
+function renderLeads(){
+  const fl=filtroLead==='todos'?leads:leads.filter(l=>l.produto===filtroLead);
+  const el=document.getElementById('leads-lista');
+  if(!fl.length){el.innerHTML='<div class="empty">Nenhum lead nesta categoria.</div>';return}
+  el.innerHTML=fl.map(l=>{
+    const ini=l.nome.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase();
+    const avC=l.produto==='tutoria'?'av-t':l.produto==='aceleradora'?'av-a':'av-n';
+    const pC=l.produto==='tutoria'?'pill-t':l.produto==='aceleradora'?'pill-a':'pill-n';
+    const pL=l.produto==='tutoria'?'Tutoria':l.produto==='aceleradora'?'Aceleradora':'—';
+    const eL={novo:'Novo',qualificado:'Qualificado',aplicou:'Aplicou',negociacao:'Negociação',fechado:'Fechado'}[l.etapa]||l.etapa;
+    return`<div class="lead-item"><div class="lead-avatar ${avC}">${ini}</div><div style="flex:1;min-width:0"><div class="lead-name">${l.nome}</div><div class="lead-fat">${l.faturamento} · ${l.origem} · ${eL}</div>${l.motivo?`<span class="motivo-chip" style="border:0.5px solid ${COR_M[l.motivo]||'#888'};color:${COR_M[l.motivo]||'#888'};background:${COR_M[l.motivo]||'#888'}18">${l.motivo}</span>`:''}</div><span class="pill ${pC}">${pL}</span></div>`;
+  }).join('');
+}
+
+function filtrarLeads(tipo,el){
+  filtroLead=tipo;
+  el.closest('.card').querySelectorAll('.ltab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderLeads();
+}
+
+function goPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+function abrirModal(){document.getElementById('modal').classList.add('open')}
+function fecharModal(){document.getElementById('modal').classList.remove('open')}
+
+function salvarLead(){
+  const nome=document.getElementById('f-nome').value.trim();
+  if(!nome){alert('Informe o nome');return}
+  leads.unshift({nome,faturamento:document.getElementById('f-fat').value||'—',origem:document.getElementById('f-origem').value,etapa:document.getElementById('f-etapa').value,produto:document.getElementById('f-produto').value,motivo:document.getElementById('f-motivo').value,valor:parseFloat(document.getElementById('f-valor').value)||0});
+  fecharModal();
+  ['f-nome','f-fat','f-valor'].forEach(id=>document.getElementById(id).value='');
+  render();
+}
+
+function parseCSV(text){
+  const lines=text.trim().split(/\r?\n/);
+  if(lines.length<2)return[];
+  const headers=lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim());
+  csvColunas=headers;
+  return lines.slice(1).map(line=>{
+    const vals=line.match(/(".*?"|[^,]+|(?<=,)(?=,)|(?<=,)$|^(?=,))/g)||[];
+    const obj={};
+    headers.forEach((h,i)=>{obj[h]=(vals[i]||'').replace(/^"|"$/g,'').trim()});
+    return obj;
+  }).filter(r=>Object.values(r).some(v=>v));
+}
+
+function autoMap(hs){
+  const l=hs.map(h=>h.toLowerCase());
+  const f=terms=>hs[l.findIndex(h=>terms.some(t=>h.includes(t)))]||'';
+  csvMapa.nome=f(['nome','name']);
+  csvMapa.faturamento=f(['fatura','renda','receita']);
+  csvMapa.meta=f(['meta','quer faturar','objetivo']);
+  csvMapa.produto=f(['produto','vende','serviço']);
+  csvMapa.tempo=f(['tempo','criando','conteúdo']);
+}
+
+function renderMapFields(){
+  const CAMPOS=[{key:'nome',label:'Nome'},{key:'faturamento',label:'Faturamento atual'},{key:'meta',label:'Quanto quer faturar'},{key:'produto',label:'Já vende/tem produto'},{key:'tempo',label:'Tempo criando conteúdo'}];
+  document.getElementById('col-map-fields').innerHTML=CAMPOS.map(c=>`<div><div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:3px">${c.label}</div><select id="cm-${c.key}" style="width:100%;padding:6px 9px;border:0.5px solid var(--color-border-secondary);border-radius:7px;font-size:12px;background:var(--color-background-secondary);color:var(--color-text-primary);font-family:'DM Sans',sans-serif"><option value="">— ignorar —</option>${csvColunas.map(col=>`<option value="${col}" ${csvMapa[c.key]===col?'selected':''}>${col}</option>`).join('')}</select></div>`).join('');
+}
+
+function getLeadCSV(row){
+  const g=key=>{const col=document.getElementById('cm-'+key)?.value||csvMapa[key];return col?(row[col]||''):''};
+  return{nome:g('nome')||'Lead sem nome',faturamento:g('faturamento'),meta:g('meta'),produto:g('produto'),tempo:g('tempo')};
+}
+
+function handleDrop(e){e.preventDefault();const f=e.dataTransfer.files[0];if(f)processFile(f)}
+function handleFile(e){if(e.target.files[0])processFile(e.target.files[0])}
+
+function processFile(file){
+  const r=new FileReader();
+  r.onload=e=>{
+    csvLeads=parseCSV(e.target.result);
+    if(!csvLeads.length){alert('CSV vazio ou inválido');return}
+    autoMap(csvColunas);
+    renderMapFields();
+    document.getElementById('col-map-area').style.display='block';
+    document.getElementById('file-info-box').innerHTML=`<div class="file-info"><span style="font-size:16px">📄</span><div style="flex:1;font-size:13px;font-weight:500;color:var(--color-text-primary)">${file.name}</div><div style="font-size:12px;color:var(--color-text-secondary)">${csvLeads.length} respostas</div></div>`;
+    document.getElementById('btn-proc').style.display='inline-flex';
+  };
+  r.readAsText(file,'UTF-8');
+}
+
+function carregarDemo(){
+  const demo=`nome,faturamento_atual,meta_faturamento,tem_produto,tempo_conteudo\nFernanda Lima,R$3500,R$15000,Sim nutricionista online,1 ano\nCarla Mendes,R$0,R$5000,Não ainda,2 meses\nJuliana Torres,R$8000,R$25000,Sim mentora de carreira,2 anos\nBianca Rocha,R$500,R$3000,Sim artesanato,6 meses\nRaquel Nunes,R$12000,R$40000,Sim coach executiva,3 anos`;
+  csvLeads=parseCSV(demo);
+  autoMap(csvColunas);
+  renderMapFields();
+  document.getElementById('col-map-area').style.display='block';
+  document.getElementById('file-info-box').innerHTML=`<div class="file-info"><span style="font-size:16px">🎯</span><div style="flex:1;font-size:13px;font-weight:500;color:var(--color-text-primary)">dados-exemplo.csv</div><div style="font-size:12px;color:var(--color-text-secondary)">${csvLeads.length} respostas</div></div>`;
+  document.getElementById('btn-proc').style.display='inline-flex';
+}
+
+async function qualificarUm(lead){
+  const p=`Você é consultora de vendas da Manoela Flores, Método PPV.\nTUTORIA HANDS-ON: já fatura algo, tem produto definido, quer atenção individual.\nACELERADORA PPV: fatura R$1k-R$10k/mês, busca método e comunidade.\n\nLEAD:\nNome: ${lead.nome}\nFaturamento: ${lead.faturamento||'não informado'}\nMeta: ${lead.meta||'não informado'}\nJá vende: ${lead.produto||'não informado'}\nTempo conteúdo: ${lead.tempo||'não informado'}\n\nResponda APENAS JSON sem markdown:\n{"score_tutoria":0-100,"score_aceleradora":0-100,"recomendacao":"tutoria"ou"aceleradora"ou"nenhum","motivo":"1 frase","motivacao_lead":"Não sabe o que postar"ou"Quer escalar o faturamento"ou"Conteúdo não converte"ou"Não sabe se posicionar"ou"Outro"}`;
+  const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:300,messages:[{role:"user",content:p}]})});
+  const d=await res.json();
+  return JSON.parse(d.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim());
+}
+
+async function processarCSV(){
+  if(!csvLeads.length)return;
+  const btn=document.getElementById('btn-proc');
+  btn.disabled=true;btn.innerHTML='<span class="ldots"><span></span><span></span><span></span></span>';
+  document.getElementById('import-prog').style.display='block';
+  document.getElementById('import-results').style.display='none';
+  const resultados=[];
+  for(let i=0;i<csvLeads.length;i++){
+    const lead=getLeadCSV(csvLeads[i]);
+    document.getElementById('prog-label').textContent=`Analisando ${i+1} de ${csvLeads.length}: ${lead.nome}`;
+    document.getElementById('prog-bar').style.width=Math.round((i/csvLeads.length)*100)+'%';
+    try{const r=await qualificarUm(lead);resultados.push({...lead,...r})}
+    catch(e){resultados.push({...lead,score_tutoria:0,score_aceleradora:0,recomendacao:'nenhum',motivo:'Erro ao processar',motivacao_lead:'Outro'})}
+  }
+  document.getElementById('prog-bar').style.width='100%';
+  document.getElementById('prog-label').textContent=`Concluído — ${csvLeads.length} leads qualificados`;
+  const t=resultados.filter(r=>r.recomendacao==='tutoria').length;
+  const a=resultados.filter(r=>r.recomendacao==='aceleradora').length;
+  document.getElementById('imp-total').textContent=resultados.length;
+  document.getElementById('imp-t').textContent=t;
+  document.getElementById('imp-a').textContent=a;
+  document.getElementById('import-tbody').innerHTML=resultados.map(r=>{
+    const pC=r.recomendacao==='tutoria'?'pill-t':r.recomendacao==='aceleradora'?'pill-a':'pill-n';
+    const pL=r.recomendacao==='tutoria'?'Tutoria':r.recomendacao==='aceleradora'?'Aceleradora':'—';
+    return`<tr><td style="font-weight:500">${r.nome}<div style="font-size:11px;color:var(--color-text-secondary);margin-top:1px">${r.faturamento||'—'}</div></td><td><span class="pill ${pC}">${pL}</span></td><td style="font-size:11px;color:var(--color-text-secondary)"><span style="color:#0C1130;font-weight:500">T ${r.score_tutoria}%</span><br><span style="color:#C9A84C;font-weight:500">A ${r.score_aceleradora}%</span></td><td style="font-size:11px;color:var(--color-text-secondary)">${r.motivo||'—'}</td></tr>`;
+  }).join('');
+  document.getElementById('import-results').style.display='block';
+  btn.disabled=false;btn.innerHTML='Qualificar com IA';
+  window._importResultados=resultados;
+}
+
+function adicionarTodos(){
+  const res=window._importResultados||[];
+  res.forEach(r=>{
+    leads.unshift({nome:r.nome,faturamento:r.faturamento||'—',origem:'Respondi',etapa:'novo',produto:r.recomendacao,motivo:r.motivacao_lead||'Outro',valor:0});
+  });
+  render();
+  alert(`${res.length} leads adicionados ao pipeline!`);
+  goPage('visao',document.querySelector('.ntab'));
+}
+
+function preencherExemplo(){
+  document.getElementById('a-nome').value='Fernanda Lima';
+  document.getElementById('a-resp').value='Faturamento atual: R$3.500/mês\nQuanto quer faturar: R$15.000/mês\nJá vende / tem produto: Sim, sou nutricionista e atendo online\nTempo criando conteúdo: 1 ano';
+}
+
+async function analisarLead(){
+  const nome=document.getElementById('a-nome').value.trim();
+  const resp=document.getElementById('a-resp').value.trim();
+  if(!resp){alert('Cole as respostas do formulário');return}
+  const btn=document.getElementById('btn-analisar');
+  btn.disabled=true;btn.innerHTML='<span class="ldots"><span></span><span></span><span></span></span>';
+  document.getElementById('analise-result').style.display='none';
+  const prompt=`Você é consultora de vendas da Manoela Flores, Método PPV.\nTUTORIA HANDS-ON: já fatura algo, tem produto definido, quer atenção individual, resultado rápido.\nACELERADORA PPV: fatura R$1k-R$10k/mês, busca método e comunidade.\n\nRESPOSTAS:\n${resp}\n\nResponda APENAS JSON sem markdown:\n{"score_tutoria":0-100,"score_aceleradora":0-100,"recomendacao":"tutoria"ou"aceleradora"ou"nenhum","titulo":"frase curta sobre o lead","motivo":"1 frase","pontos_positivos":["...","..."],"pontos_atencao":["..."],"abordagem":"mensagem sugerida de primeiro contato","motivacao_lead":"Não sabe o que postar"ou"Quer escalar o faturamento"ou"Conteúdo não converte"ou"Não sabe se posicionar"ou"Outro"}`;
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:600,messages:[{role:"user",content:prompt}]})});
+    const d=await res.json();
+    const r=JSON.parse(d.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim());
+    leadAnalisado={nome:nome||'Lead',faturamento:'—',origem:'Formulário',etapa:'novo',produto:r.recomendacao,motivo:r.motivacao_lead||'Outro',valor:0};
+    document.getElementById('s-t').textContent=r.score_tutoria+'%';
+    document.getElementById('s-a').textContent=r.score_aceleradora+'%';
+    setTimeout(()=>{document.getElementById('sb-t').style.width=r.score_tutoria+'%';document.getElementById('sb-a').style.width=r.score_aceleradora+'%'},100);
+    const rC=r.recomendacao==='tutoria'?'rec-box-t':r.recomendacao==='aceleradora'?'rec-box-a':'rec-box-n';
+    const rL=r.recomendacao==='tutoria'?'Tutoria Hands-On':r.recomendacao==='aceleradora'?'Aceleradora PPV':'Não qualificado agora';
+    const rTC=r.recomendacao==='tutoria'?'color:#0C1130':r.recomendacao==='aceleradora'?'color:#946e1a':'color:var(--color-text-secondary)';
+    document.getElementById('rec-container').innerHTML=`<div class="rec-box ${rC}"><div class="rec-tag" style="${rTC}">${rL}</div><div class="rec-title">${r.titulo}</div><div class="rec-reason">${r.motivo}</div></div>`;
+    document.getElementById('pontos-grid').innerHTML=[...(r.pontos_positivos||[]).map(p=>`<div style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><div style="width:6px;height:6px;border-radius:50%;background:#3B6D11;margin-top:5px;flex-shrink:0"></div><span>${p}</span></div>`),(r.pontos_atencao||[]).map(p=>`<div style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><div style="width:6px;height:6px;border-radius:50%;background:#BA7517;margin-top:5px;flex-shrink:0"></div><span>${p}</span></div>`)].flat().join('');
+    document.getElementById('abord-text').textContent=r.abordagem;
+    document.getElementById('analise-result').style.display='block';
+  }catch(e){alert('Erro ao analisar. Tente novamente.')}
+  btn.disabled=false;btn.innerHTML='Analisar com IA';
+}
+
+function adicionarLeadAnalisado(){
+  if(!leadAnalisado)return;
+  leads.unshift(leadAnalisado);
+  render();
+  alert('Lead adicionado ao pipeline!');
+  goPage('visao',document.querySelector('.ntab'));
+}
+
+render();
+setTimeout(()=>{
+  const fat=leads.filter(l=>l.etapa==='fechado').reduce((s,l)=>s+(l.valor||0),0);
+  document.getElementById('meta-bar').style.width=Math.min(100,Math.round(fat/META*100))+'%';
+},200);
+</script>
