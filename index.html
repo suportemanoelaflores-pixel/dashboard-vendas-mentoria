@@ -6,309 +6,308 @@
 <title>Dashboard Comercial · Método PPV</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{
-  --navy:#0C1130;--navy-mid:#1a2448;--navy-light:#2a3560;
-  --cream:#F0EAD8;--gold:#C9A84C;--gold-dim:#9a7530;
-  --bg:#f4f1eb;--surface:#ffffff;--surface2:#f0ede6;
-  --border:rgba(12,17,48,.1);--border2:rgba(12,17,48,.2);
-  --text:#0C1130;--text2:#5a6080;--text3:#9aa0b8;
+  --navy:#0C1130;--navy2:#1a2448;--navy3:#2a3560;
+  --cream:#F0EAD8;--gold:#C9A84C;--gold2:#9a7530;
+  --bg:#f4f1eb;--surf:#fff;--surf2:#f0ede6;
+  --bdr:rgba(12,17,48,.1);--bdr2:rgba(12,17,48,.2);
+  --tx:#0C1130;--tx2:#5a6080;--tx3:#9aa0b8;
   --green:#3B6D11;--blue:#185FA5;--purple:#534AB7;--amber:#854F0B;--red:#A32D2D;
-  --sidebar-w:240px;--radius:12px;
+  --r:12px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
 
-/* ── SIDEBAR ── */
-.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--navy);display:flex;flex-direction:column;z-index:200;transition:transform .3s}
-.sidebar-logo{padding:1.75rem 1.5rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.07)}
-.logo-eyebrow{font-size:10px;letter-spacing:1.4px;color:#6b75a0;text-transform:uppercase;margin-bottom:5px}
-.logo-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--cream);font-weight:500;line-height:1.2}
-.logo-title em{color:var(--gold);font-style:italic}
-.sidebar-nav{flex:1;padding:1rem 0;overflow-y:auto}
-.nav-section{font-size:10px;letter-spacing:1px;color:#3d4870;text-transform:uppercase;padding:.75rem 1.5rem .25rem}
-.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 1.5rem;font-size:13px;color:#8a93b8;background:none;border:none;border-right:2px solid transparent;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;text-align:left}
-.nav-btn:hover{color:var(--cream);background:rgba(255,255,255,.04)}
-.nav-btn.active{color:var(--cream);background:rgba(255,255,255,.08);border-right-color:var(--gold)}
-.nav-btn svg{opacity:.6;flex-shrink:0}
-.nav-btn.active svg{opacity:1}
-.nav-badge{background:var(--gold);color:var(--navy);font-size:10px;font-weight:500;padding:2px 7px;border-radius:10px;margin-left:auto}
-.sidebar-foot{padding:1rem 1.5rem;border-top:1px solid rgba(255,255,255,.07)}
-.sidebar-user strong{display:block;font-size:13px;color:var(--cream);margin-bottom:2px}
-.sidebar-user span{font-size:11px;color:#6b75a0}
+/* ── TOPBAR ── */
+.topbar{background:var(--navy);display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:52px;position:sticky;top:0;z-index:100}
+.tb-left{display:flex;align-items:center;gap:1.5rem}
+.tb-brand{font-family:'Playfair Display',serif;font-size:18px;color:var(--cream);font-weight:500;white-space:nowrap}
+.tb-brand em{color:var(--gold);font-style:italic}
+.tb-nav{display:flex;gap:4px}
+.tnav{background:none;border:none;padding:6px 14px;border-radius:20px;font-size:13px;color:#8a93b8;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap}
+.tnav:hover{color:var(--cream);background:rgba(255,255,255,.07)}
+.tnav.active{background:var(--cream);color:var(--navy);font-weight:500}
+.tb-right{display:flex;align-items:center;gap:10px}
+.tb-count{font-size:12px;color:#6b75a0}
+.tb-btn{background:var(--gold);color:var(--navy);border:none;border-radius:20px;padding:6px 16px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s;white-space:nowrap}
+.tb-btn:hover{opacity:.85}
+.hamburger{display:none;background:none;border:none;cursor:pointer;color:var(--cream);padding:4px}
 
-/* ── TOPBAR (mobile) ── */
-.topbar{display:none;align-items:center;justify-content:space-between;background:var(--navy);padding:.85rem 1.1rem;position:sticky;top:0;z-index:150}
-.topbar-title{font-family:'Playfair Display',serif;font-size:17px;color:var(--cream);font-weight:500}
-.topbar-title em{color:var(--gold);font-style:italic}
-.hamburger{background:none;border:none;cursor:pointer;padding:4px;color:var(--cream)}
-.hamburger svg{display:block}
-.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:190}
-.sidebar-overlay.open{display:block}
+/* ── MOBILE NAV DRAWER ── */
+.drawer{display:none;position:fixed;top:52px;left:0;right:0;background:var(--navy2);z-index:90;padding:.5rem;flex-direction:column;gap:2px;border-bottom:1px solid var(--navy3)}
+.drawer.open{display:flex}
+.drawer .tnav{text-align:left;border-radius:8px;padding:10px 14px}
 
 /* ── MAIN ── */
-.main{margin-left:var(--sidebar-w);padding:2rem 2.5rem;min-height:100vh}
+.main{padding:2rem 2.5rem;max-width:1400px;margin:0 auto}
 .page{display:none}
 .page.active{display:block}
 
 /* ── PAGE HEADER ── */
-.page-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.75rem;flex-wrap:wrap;gap:.75rem}
-.page-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:500}
-.page-title em{color:var(--gold);font-style:italic}
-.page-sub{font-size:13px;color:var(--text2);margin-top:3px}
+.phdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.75rem;flex-wrap:wrap;gap:.75rem}
+.ptitle{font-family:'Playfair Display',serif;font-size:28px;font-weight:500}
+.ptitle em{color:var(--gold);font-style:italic}
+.psub{font-size:13px;color:var(--tx2);margin-top:3px}
 
 /* ── META CARD ── */
-.meta-card{background:var(--navy);border-radius:var(--radius);padding:1.4rem 1.75rem;margin-bottom:1.5rem}
-.meta-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
-.meta-lbl{font-size:11px;color:#8a93b8;text-transform:uppercase;letter-spacing:.9px}
-.meta-pct{font-size:15px;font-weight:500;color:var(--gold)}
-.meta-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
-.meta-val{font-family:'Playfair Display',serif;font-size:32px;color:var(--cream);font-weight:500}
-.meta-rest{font-size:13px;color:#6b75a0}
-.meta-bg{background:var(--navy-mid);border-radius:6px;height:6px;overflow:hidden}
-.meta-fill{height:6px;background:var(--gold);border-radius:6px;width:0%;transition:width 1s ease}
+.meta-card{background:var(--navy);border-radius:var(--r);padding:1.5rem 2rem;margin-bottom:1.75rem;display:flex;align-items:center;gap:3rem;flex-wrap:wrap}
+.meta-left{flex:1;min-width:200px}
+.meta-lbl{font-size:11px;color:#8a93b8;text-transform:uppercase;letter-spacing:.9px;margin-bottom:4px}
+.meta-val{font-family:'Playfair Display',serif;font-size:36px;color:var(--cream);font-weight:500;line-height:1}
+.meta-sub{font-size:13px;color:#6b75a0;margin-top:6px}
+.meta-prog{flex:2;min-width:260px}
+.meta-prog-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.meta-prog-lbl{font-size:12px;color:#8a93b8}
+.meta-pct{font-size:16px;font-weight:500;color:var(--gold)}
+.meta-bg{background:var(--navy2);border-radius:6px;height:8px;overflow:hidden}
+.meta-fill{height:8px;background:var(--gold);border-radius:6px;width:0%;transition:width 1s ease}
+.meta-prog-rest{font-size:12px;color:#6b75a0;margin-top:6px}
 
-/* ── KPI GRIDS ── */
-.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:1.25rem}
-.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:1.25rem}
-.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:1.25rem}
-.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem 1.25rem;position:relative;overflow:hidden;transition:border-color .15s,transform .15s}
-.kpi:hover{border-color:var(--border2);transform:translateY(-1px)}
+/* ── GRIDS ── */
+.g5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:1.75rem}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:1.75rem}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:1.75rem}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:1.75rem}
+.g-2-1{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:1.75rem}
+.g-1-1-1{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:1.75rem}
+
+/* ── KPI ── */
+.kpi{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:1.25rem 1.4rem;position:relative;overflow:hidden;transition:border-color .15s,transform .15s}
+.kpi:hover{border-color:var(--bdr2);transform:translateY(-2px)}
 .kpi-acc{position:absolute;top:0;left:0;right:0;height:3px}
-.kpi-lbl{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin:4px 0 6px}
-.kpi-val{font-family:'Playfair Display',serif;font-size:24px;color:var(--text);font-weight:500}
-.kpi-sub{font-size:12px;color:var(--text3);margin-top:4px}
+.kpi-lbl{font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.8px;margin:4px 0 8px}
+.kpi-val{font-family:'Playfair Display',serif;font-size:26px;color:var(--tx);font-weight:500}
+.kpi-sub{font-size:12px;color:var(--tx3);margin-top:4px}
 
-/* ── PIPELINE ── */
-.pipe-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:1.5rem}
-.pipe-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem 1rem;text-align:center;transition:border-color .15s}
-.pipe-col:hover{border-color:var(--border2)}
-.pipe-dot{width:9px;height:9px;border-radius:50%;margin:0 auto 8px}
-.pipe-lbl{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:8px}
-.pipe-n{font-family:'Playfair Display',serif;font-size:28px;font-weight:500;color:var(--text)}
-.pipe-v{font-size:11px;color:var(--text3);margin-top:3px}
+/* ── PIPE ── */
+.pipe-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:1.75rem}
+.pipe-col{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:1.25rem;text-align:center;transition:border-color .15s,transform .15s;cursor:default}
+.pipe-col:hover{border-color:var(--bdr2);transform:translateY(-2px)}
+.pipe-dot{width:10px;height:10px;border-radius:50%;margin:0 auto 10px}
+.pipe-lbl{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.9px;color:var(--tx2);margin-bottom:8px}
+.pipe-n{font-family:'Playfair Display',serif;font-size:32px;font-weight:500;color:var(--tx)}
+.pipe-v{font-size:12px;color:var(--tx3);margin-top:4px}
 
-/* ── RANKINGS ── */
-.g3-rank{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:1.5rem}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem 1.4rem}
-.card-title{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
-.rank-item{margin-bottom:12px}
+/* ── CARD ── */
+.card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:1.4rem 1.6rem}
+.card-title{font-size:11px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.9px;margin-bottom:16px}
+.rank-item{margin-bottom:13px}
 .rank-item:last-child{margin-bottom:0}
 .rank-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
-.rank-name{font-size:13px;font-weight:500;color:var(--text)}
-.rank-info{font-size:11px;color:var(--text2)}
-.rank-bg{background:var(--surface2);border-radius:4px;height:5px;overflow:hidden}
+.rank-name{font-size:13px;font-weight:500;color:var(--tx)}
+.rank-info{font-size:11px;color:var(--tx2)}
+.rank-bg{background:var(--surf2);border-radius:4px;height:5px;overflow:hidden}
 .rank-bar{height:5px;border-radius:4px;transition:width .8s ease}
 
-/* ── LEADS TABLE ── */
-.leads-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1rem;align-items:center}
-.search{flex:1;min-width:180px;padding:9px 14px;border:1px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s}
+/* ── LEADS ── */
+.leads-tb{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1rem;align-items:center}
+.search{flex:1;min-width:200px;padding:9px 16px;border:1px solid var(--bdr);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--tx);background:var(--surf);outline:none;transition:border-color .15s}
 .search:focus{border-color:var(--navy)}
-.filt{padding:8px 14px;border:1px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text2);background:var(--surface);cursor:pointer;transition:all .15s;white-space:nowrap}
+.filt{padding:7px 16px;border:1px solid var(--bdr);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--tx2);background:var(--surf);cursor:pointer;transition:all .15s;white-space:nowrap}
 .filt:hover,.filt.active{background:var(--navy);color:var(--cream);border-color:var(--navy)}
-.leads-table{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.t-head{display:grid;grid-template-columns:2fr 1.1fr 1fr 1.4fr 1fr 60px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface2)}
-.th{font-size:10px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.7px}
-.t-row{display:grid;grid-template-columns:2fr 1.1fr 1fr 1.4fr 1fr 60px;padding:13px 16px;border-bottom:1px solid var(--border);align-items:center;transition:background .1s}
+.ltable{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden}
+.t-head{display:grid;grid-template-columns:2fr 1.1fr 1.1fr 1.4fr 1fr 60px;padding:10px 20px;border-bottom:1px solid var(--bdr);background:var(--surf2)}
+.th{font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.7px}
+.t-row{display:grid;grid-template-columns:2fr 1.1fr 1.1fr 1.4fr 1fr 60px;padding:14px 20px;border-bottom:1px solid var(--bdr);align-items:center;transition:background .1s}
 .t-row:last-child{border-bottom:none}
-.t-row:hover{background:var(--surface2)}
-.lead-av{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;margin-right:10px;flex-shrink:0}
+.t-row:hover{background:var(--surf2)}
+.lav{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;margin-right:10px;flex-shrink:0}
 .av-t{background:rgba(12,17,48,.08);color:var(--navy)}
 .av-a{background:rgba(201,168,76,.15);color:#7a5a10}
-.av-n{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
-.lead-name{font-size:13px;font-weight:500;color:var(--text)}
-.lead-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.av-n{background:var(--surf2);color:var(--tx2);border:1px solid var(--bdr)}
+.lname{font-size:13px;font-weight:500;color:var(--tx)}
+.lsub{font-size:11px;color:var(--tx3);margin-top:1px}
 .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500}
 .pill-t{background:rgba(12,17,48,.08);color:var(--navy)}
 .pill-a{background:rgba(201,168,76,.15);color:#7a5a10}
-.pill-n{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.pill-n{background:var(--surf2);color:var(--tx2);border:1px solid var(--bdr)}
 .ep{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px}
 .e-novo{background:#faeeda;color:#633806}
 .e-qualificado{background:#e6f1fb;color:#0C447C}
 .e-aplicou{background:#eeedfe;color:#3C3489}
 .e-negociacao{background:#fef3e2;color:#854F0B}
 .e-fechado{background:#eaf3de;color:#27500A}
-.mchip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500}
-.btn-icon{background:none;border:1px solid var(--border);border-radius:8px;padding:5px 9px;cursor:pointer;color:var(--text2);font-size:12px;transition:all .15s}
-.btn-icon:hover{background:#fcebeb;color:var(--red);border-color:#f09595}
+.mchip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:500}
+.delbtn{background:none;border:1px solid var(--bdr);border-radius:8px;padding:5px 9px;cursor:pointer;color:var(--tx2);font-size:12px;transition:all .15s}
+.delbtn:hover{background:#fcebeb;color:var(--red);border-color:#f09595}
 
 /* ── BUTTONS ── */
-.btn{background:var(--navy);color:var(--cream);border:none;border-radius:10px;padding:10px 22px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .15s;display:inline-flex;align-items:center;gap:8px}
+.btn{background:var(--navy);color:var(--cream);border:none;border-radius:20px;padding:9px 22px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .15s;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
 .btn:hover{opacity:.85}
 .btn:disabled{opacity:.4;cursor:not-allowed}
-.btn-out{background:none;border:1px solid var(--border);color:var(--text2);border-radius:10px;padding:9px 18px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .15s}
-.btn-out:hover{background:var(--surface2);color:var(--text)}
+.btn-out{background:none;border:1px solid var(--bdr);color:var(--tx2);border-radius:20px;padding:8px 18px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .15s}
+.btn-out:hover{background:var(--surf2);color:var(--tx)}
 
 /* ── MODAL ── */
-.modal-ov{display:none;position:fixed;inset:0;background:rgba(12,17,48,.65);z-index:300;align-items:center;justify-content:center;padding:1rem}
-.modal-ov.open{display:flex}
-.modal{background:var(--surface);border-radius:16px;padding:1.75rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
-.modal-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:500;margin-bottom:1.25rem}
-.field{margin-bottom:11px}
-.field label{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--text2);display:block;margin-bottom:4px}
-.field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:13px;color:var(--text);background:var(--surface2);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--navy);background:var(--surface)}
+.mov{display:none;position:fixed;inset:0;background:rgba(12,17,48,.65);z-index:200;align-items:center;justify-content:center;padding:1rem}
+.mov.open{display:flex}
+.modal{background:var(--surf);border-radius:16px;padding:2rem;width:100%;max-width:500px;max-height:92vh;overflow-y:auto}
+.modal-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:500;margin-bottom:1.4rem}
+.field{margin-bottom:12px}
+.field label{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--tx2);display:block;margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;padding:10px 14px;border:1px solid var(--bdr);border-radius:10px;font-size:13px;color:var(--tx);background:var(--surf2);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--navy);background:var(--surf)}
 .fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem}
-.btn-cancel{background:none;border:1px solid var(--border);color:var(--text2);border-radius:10px;padding:9px 18px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer}
+.mbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:1.4rem}
+.btn-cancel{background:none;border:1px solid var(--bdr);color:var(--tx2);border-radius:20px;padding:9px 20px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer}
 
 /* ── IMPORT ── */
-.upload-area{border:2px dashed var(--border2);border-radius:var(--radius);padding:2.5rem;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface)}
-.upload-area:hover,.upload-area.drag{border-color:var(--navy);background:rgba(12,17,48,.03)}
-.upload-icon{font-size:36px;margin-bottom:10px}
-.upload-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:4px}
-.upload-sub{font-size:13px;color:var(--text2)}
-.upload-sub span{color:var(--navy);font-weight:500;cursor:pointer;text-decoration:underline}
-.file-box{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);margin-top:12px}
-.prog-wrap{background:var(--border);border-radius:6px;height:6px;overflow:hidden;margin:12px 0 6px}
+.uarea{border:2px dashed var(--bdr2);border-radius:var(--r);padding:3rem;text-align:center;cursor:pointer;transition:all .2s;background:var(--surf)}
+.uarea:hover,.uarea.drag{border-color:var(--navy);background:rgba(12,17,48,.03)}
+.uarea-icon{font-size:40px;margin-bottom:12px}
+.uarea-title{font-size:16px;font-weight:500;color:var(--tx);margin-bottom:5px}
+.uarea-sub{font-size:14px;color:var(--tx2)}
+.uarea-sub span{color:var(--navy);font-weight:500;cursor:pointer;text-decoration:underline}
+.fbox{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--surf2);border-radius:10px;border:1px solid var(--bdr);margin-top:14px}
+.prog-wrap{background:var(--bdr);border-radius:6px;height:6px;overflow:hidden;margin:14px 0 6px}
 .prog-bar{height:6px;background:var(--navy);border-radius:6px;transition:width .4s ease}
 .imp-table{width:100%;border-collapse:collapse;font-size:13px}
-.imp-table th{text-align:left;padding:10px 14px;font-size:10px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.7px;border-bottom:1px solid var(--border);background:var(--surface2)}
-.imp-table td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+.imp-table th{text-align:left;padding:10px 16px;font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.7px;border-bottom:1px solid var(--bdr);background:var(--surf2)}
+.imp-table td{padding:12px 16px;border-bottom:1px solid var(--bdr);vertical-align:middle}
 .imp-table tr:last-child td{border-bottom:none}
-.imp-table tr:hover td{background:var(--surface2)}
+.imp-table tr:hover td{background:var(--surf2)}
 
 /* ── ANALYZE ── */
-.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1rem}
-.score-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem 1.25rem}
-.score-lbl{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
-.score-num{font-family:'Playfair Display',serif;font-size:30px;font-weight:500}
-.score-bar-bg{background:var(--surface2);border-radius:4px;height:5px;margin-top:8px;overflow:hidden}
-.score-bar{height:5px;border-radius:4px;transition:width .8s ease}
-.rec-box{border-radius:var(--radius);padding:1.1rem 1.4rem;margin-bottom:1rem}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1rem}
+.sc{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:1.25rem 1.4rem}
+.sc-lbl{font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.sc-num{font-family:'Playfair Display',serif;font-size:32px;font-weight:500}
+.sb-bg{background:var(--surf2);border-radius:4px;height:5px;margin-top:8px;overflow:hidden}
+.sb-fill{height:5px;border-radius:4px;transition:width .8s ease}
+.rec-box{border-radius:var(--r);padding:1.25rem 1.5rem;margin-bottom:1rem}
 .rec-t{background:rgba(12,17,48,.05);border:2px solid var(--navy)}
 .rec-a{background:rgba(201,168,76,.08);border:2px solid var(--gold)}
-.rec-n{background:var(--surface2);border:1px solid var(--border)}
-.rec-tag{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
-.rec-title{font-size:16px;font-weight:500;color:var(--text);margin-bottom:5px}
-.rec-reason{font-size:13px;color:var(--text2);line-height:1.6}
-.abord-box{background:rgba(12,17,48,.04);border-left:3px solid var(--navy);border-radius:0 10px 10px 0;padding:12px 16px}
-.abord-lbl{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.8px;color:var(--navy);margin-bottom:6px}
-.abord-text{font-size:13px;color:var(--text);line-height:1.7;font-style:italic}
+.rec-n{background:var(--surf2);border:1px solid var(--bdr)}
+.rec-tag{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.9px;margin-bottom:6px}
+.rec-title{font-size:17px;font-weight:500;color:var(--tx);margin-bottom:5px}
+.rec-reason{font-size:13px;color:var(--tx2);line-height:1.6}
+.abord{background:rgba(12,17,48,.04);border-left:3px solid var(--navy);border-radius:0 10px 10px 0;padding:14px 18px}
+.abord-lbl{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.9px;color:var(--navy);margin-bottom:7px}
+.abord-text{font-size:13px;color:var(--tx);line-height:1.75;font-style:italic}
 
 /* ── CONFIG ── */
-.cfg-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem 1.75rem;margin-bottom:1rem}
-.cfg-title{font-size:16px;font-weight:500;color:var(--text);margin-bottom:4px}
-.cfg-sub{font-size:13px;color:var(--text2);margin-bottom:1.1rem;line-height:1.6}
-.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.cfg-card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:1.75rem 2rem;margin-bottom:1rem}
+.cfg-title{font-size:16px;font-weight:500;color:var(--tx);margin-bottom:5px}
+.cfg-sub{font-size:13px;color:var(--tx2);margin-bottom:1.25rem;line-height:1.65}
+.sdot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:7px}
 
 /* ── MISC ── */
-.empty{text-align:center;padding:3rem 1rem;color:var(--text2);font-size:14px}
-.empty-icon{font-size:32px;margin-bottom:8px;opacity:.35}
-.sec-lbl{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.9px;margin-bottom:10px}
+.empty{text-align:center;padding:3rem 1rem;color:var(--tx2);font-size:14px}
+.empty-icon{font-size:36px;margin-bottom:10px;opacity:.3}
+.sec-lbl{font-size:11px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.9px;margin-bottom:10px}
+.divider{border:none;border-top:1px solid var(--bdr);margin:1rem 0}
 .ldots{display:inline-flex;gap:4px}
 .ldots span{width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 1.2s infinite}
 .ldots span:nth-child(2){animation-delay:.2s}
 .ldots span:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
-.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--navy);color:var(--cream);padding:12px 22px;border-radius:10px;font-size:13px;z-index:999;transform:translateY(100px);opacity:0;transition:all .3s;max-width:320px}
+.toast{position:fixed;bottom:1.75rem;right:1.75rem;background:var(--navy);color:var(--cream);padding:13px 24px;border-radius:20px;font-size:13px;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;max-width:340px;box-shadow:0 4px 24px rgba(12,17,48,.25)}
 .toast.show{transform:translateY(0);opacity:1}
 .toast.err{background:var(--red)}
-.divider{border:none;border-top:1px solid var(--border);margin:1rem 0}
 
 /* ── RESPONSIVE ── */
 @media(max-width:900px){
-  .topbar{display:flex}
-  .sidebar{transform:translateX(-100%)}
-  .sidebar.open{transform:translateX(0)}
-  .main{margin-left:0;padding:1.25rem 1rem}
-  .g3,.g3-rank{grid-template-columns:1fr 1fr}
-  .g4{grid-template-columns:1fr 1fr}
-  .pipe-grid{grid-template-columns:repeat(3,1fr)}
-  .t-head,.t-row{grid-template-columns:2fr 1fr 80px}
+  .topbar{padding:0 1rem}
+  .tb-nav{display:none}
+  .hamburger{display:block}
+  .main{padding:1.25rem 1rem}
+  .g5,.pipe-grid{grid-template-columns:repeat(3,1fr)}
+  .g4,.g3{grid-template-columns:repeat(2,1fr)}
+  .g-2-1,.g-1-1-1{grid-template-columns:1fr}
+  .t-head,.t-row{grid-template-columns:2fr 1fr 70px}
   .th:nth-child(n+3):nth-child(-n+5),.t-row>*:nth-child(n+3):nth-child(-n+5){display:none}
-  .score-grid{grid-template-columns:1fr}
-  .page-hdr{flex-direction:column}
-  .meta-val{font-size:26px}
+  .meta-card{flex-direction:column;gap:1.25rem}
+  .sg{grid-template-columns:1fr}
 }
 @media(max-width:560px){
-  .g3,.g2,.g3-rank{grid-template-columns:1fr}
-  .g4{grid-template-columns:1fr 1fr}
-  .pipe-grid{grid-template-columns:repeat(3,1fr)}
+  .g4,.g3,.g2{grid-template-columns:1fr}
+  .g5,.pipe-grid{grid-template-columns:repeat(2,1fr)}
   .fg2{grid-template-columns:1fr}
-  .kpi-val{font-size:20px}
+  .ptitle{font-size:22px}
 }
 </style>
 </head>
 <body>
 
-<!-- TOPBAR mobile -->
-<div class="topbar">
-  <div class="topbar-title">Dashboard de <em>Vendas</em></div>
-  <button class="hamburger" onclick="toggleSidebar()">
-    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-  </button>
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="tb-left">
+    <div class="tb-brand">PPV <em>Vendas</em></div>
+    <nav class="tb-nav">
+      <button class="tnav active" onclick="goPage('visao',this)">Visão Geral</button>
+      <button class="tnav" onclick="goPage('leads',this)">Leads <span id="nb" style="background:rgba(255,255,255,.15);padding:1px 6px;border-radius:10px;font-size:11px">0</span></button>
+      <button class="tnav" onclick="goPage('importar',this)">Importar CSV</button>
+      <button class="tnav" onclick="goPage('analisar',this)">Analisar Lead</button>
+      <button class="tnav" onclick="goPage('config',this)">Config</button>
+    </nav>
+  </div>
+  <div class="tb-right">
+    <span class="tb-count" id="tbfat">R$ 0 faturado</span>
+    <button class="tb-btn" onclick="abrirModal()">+ Novo lead</button>
+    <button class="hamburger" onclick="toggleDrawer()">
+      <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</header>
+<div class="drawer" id="drawer">
+  <button class="tnav active" onclick="goPage('visao',this);toggleDrawer()">Visão Geral</button>
+  <button class="tnav" onclick="goPage('leads',this);toggleDrawer()">Leads</button>
+  <button class="tnav" onclick="goPage('importar',this);toggleDrawer()">Importar CSV</button>
+  <button class="tnav" onclick="goPage('analisar',this);toggleDrawer()">Analisar Lead</button>
+  <button class="tnav" onclick="goPage('config',this);toggleDrawer()">Config</button>
 </div>
-<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<!-- SIDEBAR -->
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-eyebrow">Método PPV</div>
-    <div class="logo-title">Dashboard de <em>Vendas</em></div>
-  </div>
-  <nav class="sidebar-nav">
-    <div class="nav-section">Principal</div>
-    <button class="nav-btn active" onclick="goPage('visao',this)">
-      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-      Visão geral
-    </button>
-    <button class="nav-btn" onclick="goPage('leads',this)">
-      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>
-      Leads
-      <span class="nav-badge" id="nb">0</span>
-    </button>
-    <div class="nav-section" style="margin-top:.5rem">IA</div>
-    <button class="nav-btn" onclick="goPage('importar',this)">
-      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      Importar CSV
-    </button>
-    <button class="nav-btn" onclick="goPage('analisar',this)">
-      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      Analisar lead
-    </button>
-    <div class="nav-section" style="margin-top:.5rem">Config</div>
-    <button class="nav-btn" onclick="goPage('config',this)">
-      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-      Configurações
-    </button>
-  </nav>
-  <div class="sidebar-foot">
-    <div class="sidebar-user"><strong>Manoela Flores</strong><span>Método PPV</span></div>
-  </div>
-</aside>
-
-<main class="main">
+<div class="main">
 
 <!-- VISÃO GERAL -->
 <div class="page active" id="page-visao">
-  <div class="page-hdr">
-    <div><div class="page-title">Visão <em>Geral</em></div><div class="page-sub" id="vsub">Carregando...</div></div>
+  <div class="phdr">
+    <div><div class="ptitle">Dashboard de <em>Vendas</em></div><div class="psub" id="vsub">Método PPV · Março 2026</div></div>
   </div>
+
   <div class="meta-card">
-    <div class="meta-top"><div class="meta-lbl">Meta do mês — R$ 100.000</div><div class="meta-pct" id="mpct">0%</div></div>
-    <div class="meta-row"><div class="meta-val" id="mval">R$ 0</div><div class="meta-rest" id="mrest">—</div></div>
-    <div class="meta-bg"><div class="meta-fill" id="mfill"></div></div>
+    <div class="meta-left">
+      <div class="meta-lbl">Faturado no mês</div>
+      <div class="meta-val" id="mval">R$ 0</div>
+      <div class="meta-sub" id="msub">0 vendas fechadas</div>
+    </div>
+    <div class="meta-prog">
+      <div class="meta-prog-top"><div class="meta-prog-lbl">Meta — R$ 100.000</div><div class="meta-pct" id="mpct">0%</div></div>
+      <div class="meta-bg"><div class="meta-fill" id="mfill"></div></div>
+      <div class="meta-prog-rest" id="mrest">—</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;min-width:160px">
+      <div>
+        <div class="meta-lbl" style="margin-bottom:2px">Tutoria Hands-On</div>
+        <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--cream)" id="mtv">—</div>
+        <div style="font-size:11px;color:#6b75a0" id="mtf">—</div>
+      </div>
+      <div>
+        <div class="meta-lbl" style="margin-bottom:2px">Aceleradora PPV</div>
+        <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--cream)" id="mav">—</div>
+        <div style="font-size:11px;color:#6b75a0" id="maf">—</div>
+      </div>
+    </div>
   </div>
-  <div class="sec-lbl">Números</div>
-  <div class="g3">
-    <div class="kpi"><div class="kpi-acc" style="background:var(--gold)"></div><div class="kpi-lbl">Faturamento</div><div class="kpi-val" id="kfat">—</div></div>
-    <div class="kpi"><div class="kpi-acc" style="background:var(--navy)"></div><div class="kpi-lbl">Vendas fechadas</div><div class="kpi-val" id="kvend">—</div></div>
-    <div class="kpi"><div class="kpi-acc" style="background:var(--green)"></div><div class="kpi-lbl">Ticket médio</div><div class="kpi-val" id="ktick">—</div></div>
-  </div>
-  <div class="g2">
-    <div class="kpi"><div class="kpi-lbl">Tutoria Hands-On</div><div class="kpi-val" id="ktv">—</div><div class="kpi-sub" id="ktf">—</div></div>
-    <div class="kpi"><div class="kpi-lbl">Aceleradora PPV</div><div class="kpi-val" id="kav">—</div><div class="kpi-sub" id="kaf">—</div></div>
-  </div>
-  <div class="sec-lbl">Pipeline</div>
+
   <div class="pipe-grid">
     <div class="pipe-col"><div class="pipe-dot" style="background:var(--gold)"></div><div class="pipe-lbl">Novo</div><div class="pipe-n" id="pcn">0</div><div class="pipe-v" id="pvn">—</div></div>
-    <div class="pipe-col"><div class="pipe-dot" style="background:var(--blue)"></div><div class="pipe-lbl">Qualif.</div><div class="pipe-n" id="pcq">0</div><div class="pipe-v" id="pvq">—</div></div>
+    <div class="pipe-col"><div class="pipe-dot" style="background:var(--blue)"></div><div class="pipe-lbl">Qualificado</div><div class="pipe-n" id="pcq">0</div><div class="pipe-v" id="pvq">—</div></div>
     <div class="pipe-col"><div class="pipe-dot" style="background:var(--purple)"></div><div class="pipe-lbl">Aplicou</div><div class="pipe-n" id="pca">0</div><div class="pipe-v" id="pva">—</div></div>
-    <div class="pipe-col"><div class="pipe-dot" style="background:var(--amber)"></div><div class="pipe-lbl">Negoc.</div><div class="pipe-n" id="pcng">0</div><div class="pipe-v" id="pvng">—</div></div>
+    <div class="pipe-col"><div class="pipe-dot" style="background:var(--amber)"></div><div class="pipe-lbl">Negociação</div><div class="pipe-n" id="pcng">0</div><div class="pipe-v" id="pvng">—</div></div>
     <div class="pipe-col"><div class="pipe-dot" style="background:var(--green)"></div><div class="pipe-lbl">Fechado</div><div class="pipe-n" id="pcf">0</div><div class="pipe-v" id="pvf">—</div></div>
   </div>
-  <div class="g3-rank">
+
+  <div class="g4">
+    <div class="kpi"><div class="kpi-acc" style="background:var(--gold)"></div><div class="kpi-lbl">Faturamento total</div><div class="kpi-val" id="kfat">—</div></div>
+    <div class="kpi"><div class="kpi-acc" style="background:var(--navy)"></div><div class="kpi-lbl">Vendas fechadas</div><div class="kpi-val" id="kvend">—</div></div>
+    <div class="kpi"><div class="kpi-acc" style="background:var(--green)"></div><div class="kpi-lbl">Ticket médio</div><div class="kpi-val" id="ktick">—</div></div>
+    <div class="kpi"><div class="kpi-acc" style="background:var(--blue)"></div><div class="kpi-lbl">Total de leads</div><div class="kpi-val" id="ktleads">—</div></div>
+  </div>
+
+  <div class="g-1-1-1">
     <div class="card"><div class="card-title">Por produto</div><div id="rprod"><div class="empty" style="padding:.5rem 0;font-size:12px">—</div></div></div>
     <div class="card"><div class="card-title">Origem dos leads</div><div id="rorig"><div class="empty" style="padding:.5rem 0;font-size:12px">—</div></div></div>
     <div class="card" style="border-top:3px solid var(--gold)"><div class="card-title">Por que buscam</div><div id="rmot"><div class="empty" style="padding:.5rem 0;font-size:12px">—</div></div></div>
@@ -317,25 +316,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- LEADS -->
 <div class="page" id="page-leads">
-  <div class="page-hdr">
-    <div><div class="page-title">Leads</div><div class="page-sub" id="lsub">0 leads</div></div>
+  <div class="phdr">
+    <div><div class="ptitle">Leads</div><div class="psub" id="lsub">0 leads cadastrados</div></div>
     <button class="btn" onclick="abrirModal()">+ Novo lead</button>
   </div>
-  <div class="leads-toolbar">
+  <div class="leads-tb">
     <input class="search" type="text" placeholder="Buscar por nome..." id="search" oninput="renderLeads()">
     <button class="filt active" onclick="setFiltro('todos',this)">Todos</button>
     <button class="filt" onclick="setFiltro('tutoria',this)">Tutoria</button>
     <button class="filt" onclick="setFiltro('aceleradora',this)">Aceleradora</button>
     <button class="filt" onclick="setFiltro('nenhum',this)">Não qualif.</button>
   </div>
-  <div class="leads-table">
+  <div class="ltable">
     <div class="t-head">
-      <div class="th">Lead</div>
-      <div class="th">Produto</div>
-      <div class="th">Etapa</div>
-      <div class="th">Motivação</div>
-      <div class="th">Origem</div>
-      <div class="th"></div>
+      <div class="th">Lead</div><div class="th">Produto</div><div class="th">Etapa</div><div class="th">Motivação</div><div class="th">Origem</div><div class="th"></div>
     </div>
     <div id="leads-body"><div class="empty"><div class="empty-icon">👤</div>Nenhum lead ainda.</div></div>
   </div>
@@ -343,28 +337,28 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- IMPORTAR -->
 <div class="page" id="page-importar">
-  <div class="page-hdr"><div><div class="page-title">Importar <em>CSV</em></div><div class="page-sub">Suba o arquivo do Respondi e qualifique com IA</div></div></div>
+  <div class="phdr"><div><div class="ptitle">Importar <em>CSV</em></div><div class="psub">Suba o arquivo do Respondi e qualifique todos com IA</div></div></div>
   <div class="card" style="margin-bottom:1rem">
-    <div class="upload-area" id="uarea" onclick="document.getElementById('finput').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
-      <div class="upload-icon">📄</div>
-      <div class="upload-title">Arraste o CSV aqui</div>
-      <div class="upload-sub">ou <span onclick="event.stopPropagation();document.getElementById('finput').click()">clique para selecionar</span></div>
+    <div class="uarea" id="uarea" onclick="document.getElementById('finput').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
+      <div class="uarea-icon">📄</div>
+      <div class="uarea-title">Arraste o CSV aqui</div>
+      <div class="uarea-sub">ou <span onclick="event.stopPropagation();document.getElementById('finput').click()">clique para selecionar</span></div>
     </div>
     <input type="file" id="finput" accept=".csv" style="display:none" onchange="handleFile(event)">
     <div id="finfo"></div>
-    <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <button class="btn-out" onclick="carregarDemo()">usar dados de exemplo</button>
-      <span style="font-size:12px;color:var(--text2)">sem CSV agora? teste aqui</span>
+      <span style="font-size:13px;color:var(--tx2)">sem CSV agora? teste aqui</span>
     </div>
     <div id="cmap" style="display:none;margin-top:1.25rem">
       <div class="sec-lbl">Mapear colunas</div>
-      <div id="cmapfields" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+      <div id="cmapfields" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px"></div>
     </div>
-    <div style="margin-top:1rem;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <div style="margin-top:1.25rem;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <button class="btn" id="bproc" onclick="processarCSV()" style="display:none">Qualificar com IA</button>
       <div id="improg" style="flex:1;display:none;min-width:200px">
         <div class="prog-wrap"><div class="prog-bar" id="progbar" style="width:0%"></div></div>
-        <div style="font-size:12px;color:var(--text2)" id="proglbl">Aguardando...</div>
+        <div style="font-size:12px;color:var(--tx2)" id="proglbl">Aguardando...</div>
       </div>
     </div>
   </div>
@@ -372,18 +366,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="g3" style="margin-bottom:1rem">
       <div class="kpi"><div class="kpi-lbl">Total importado</div><div class="kpi-val" id="itotal">0</div></div>
       <div class="kpi"><div class="kpi-lbl">Tutoria</div><div class="kpi-val" id="itut" style="color:var(--navy)">0</div></div>
-      <div class="kpi"><div class="kpi-lbl">Aceleradora</div><div class="kpi-val" id="iacel" style="color:var(--gold-dim)">0</div></div>
+      <div class="kpi"><div class="kpi-lbl">Aceleradora</div><div class="kpi-val" id="iacel" style="color:var(--gold2)">0</div></div>
     </div>
     <div class="card" style="padding:0;overflow:hidden">
-      <div style="padding:1rem 1.25rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:.5rem">
+      <div style="padding:1rem 1.6rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bdr);flex-wrap:wrap;gap:.75rem">
         <div style="font-size:14px;font-weight:500">Resultado da qualificação</div>
         <button class="btn" onclick="adicionarTodos()">Adicionar todos ao pipeline</button>
       </div>
       <div style="overflow-x:auto">
-        <table class="imp-table">
-          <thead><tr><th>Nome</th><th>Faturamento</th><th>Recomendação</th><th>Scores</th><th>Motivo</th></tr></thead>
-          <tbody id="imptbody"></tbody>
-        </table>
+        <table class="imp-table"><thead><tr><th>Nome</th><th>Faturamento</th><th>Recomendação</th><th>Scores</th><th>Motivo</th></tr></thead><tbody id="imptbody"></tbody></table>
       </div>
     </div>
   </div>
@@ -391,64 +382,73 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- ANALISAR -->
 <div class="page" id="page-analisar">
-  <div class="page-hdr"><div><div class="page-title">Analisar <em>Lead</em></div><div class="page-sub">Cole as respostas e receba a qualificação com IA</div></div></div>
-  <div class="card" style="margin-bottom:1rem">
-    <div class="field"><label>Nome do lead</label><input id="anom" type="text" placeholder="Ex: Fernanda Lima"></div>
-    <div class="field"><label>Respostas do formulário</label>
-      <textarea id="aresp" rows="6" placeholder="Cole aqui as respostas do Respondi...&#10;&#10;Ex:&#10;Faturamento atual: R$3.000/mês&#10;Quanto quer faturar: R$15.000/mês&#10;Já vende / tem produto: Sim, mentora de carreira&#10;Tempo criando conteúdo: 1 ano"></textarea>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn" id="banalise" onclick="analisarLead()">Analisar com IA</button>
-      <button class="btn-out" onclick="preencherEx()">Ver exemplo</button>
-    </div>
-  </div>
-  <div id="ares" style="display:none">
-    <div class="score-grid">
-      <div class="score-card"><div class="score-lbl">Tutoria Hands-On</div><div class="score-num" id="st" style="color:var(--navy)">—</div><div class="score-bar-bg"><div class="score-bar" id="sbt" style="background:var(--navy);width:0%"></div></div></div>
-      <div class="score-card"><div class="score-lbl">Aceleradora PPV</div><div class="score-num" id="sa" style="color:var(--gold-dim)">—</div><div class="score-bar-bg"><div class="score-bar" id="sba" style="background:var(--gold);width:0%"></div></div></div>
-    </div>
-    <div id="recbox" style="margin-bottom:1rem"></div>
+  <div class="phdr"><div><div class="ptitle">Analisar <em>Lead</em></div><div class="psub">Cole as respostas do formulário e receba a qualificação com IA</div></div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start" id="analgrid">
     <div class="card">
-      <div class="card-title">Análise detalhada</div>
-      <div id="pontos" style="display:flex;flex-direction:column;gap:8px;margin-bottom:1rem"></div>
-      <div class="divider"></div>
-      <div class="abord-box"><div class="abord-lbl">Como abordar</div><div class="abord-text" id="abordtxt"></div></div>
-      <div style="margin-top:1rem"><button class="btn" onclick="addLeadAnalisado()">Adicionar ao pipeline</button></div>
+      <div class="card-title">Respostas do formulário</div>
+      <div class="field"><label>Nome do lead</label><input id="anom" type="text" placeholder="Ex: Fernanda Lima"></div>
+      <div class="field"><label>Respostas</label><textarea id="aresp" rows="8" placeholder="Cole aqui as respostas do Respondi...&#10;&#10;Ex:&#10;Faturamento atual: R$3.000/mês&#10;Quanto quer faturar: R$15.000/mês&#10;Já vende / tem produto: Sim, mentora de carreira&#10;Tempo criando conteúdo: 1 ano"></textarea></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="banalise" onclick="analisarLead()">Analisar com IA</button>
+        <button class="btn-out" onclick="preencherEx()">Ver exemplo</button>
+      </div>
+    </div>
+    <div id="ares" style="display:none">
+      <div class="sg">
+        <div class="sc"><div class="sc-lbl">Tutoria Hands-On</div><div class="sc-num" id="st" style="color:var(--navy)">—</div><div class="sb-bg"><div class="sb-fill" id="sbt" style="background:var(--navy);width:0%"></div></div></div>
+        <div class="sc"><div class="sc-lbl">Aceleradora PPV</div><div class="sc-num" id="sa" style="color:var(--gold2)">—</div><div class="sb-bg"><div class="sb-fill" id="sba" style="background:var(--gold);width:0%"></div></div></div>
+      </div>
+      <div id="recbox" style="margin-bottom:1rem"></div>
+      <div class="card">
+        <div class="card-title">Análise</div>
+        <div id="pontos" style="display:flex;flex-direction:column;gap:8px;margin-bottom:1rem"></div>
+        <div class="divider"></div>
+        <div class="abord"><div class="abord-lbl">Como abordar</div><div class="abord-text" id="abordtxt"></div></div>
+        <div style="margin-top:1rem"><button class="btn" onclick="addLeadAnalisado()">Adicionar ao pipeline</button></div>
+      </div>
+    </div>
+    <div id="ares-empty" style="display:flex;align-items:center;justify-content:center">
+      <div style="text-align:center;color:var(--tx3)">
+        <div style="font-size:48px;margin-bottom:12px;opacity:.3">🔍</div>
+        <div style="font-size:14px">A análise vai aparecer aqui</div>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- CONFIG -->
 <div class="page" id="page-config">
-  <div class="page-hdr"><div><div class="page-title">Configurações</div><div class="page-sub">Conecte o Supabase para salvar dados na nuvem</div></div></div>
-  <div class="cfg-card">
-    <div class="cfg-title">Conexão Supabase</div>
-    <div class="cfg-sub">Cole as credenciais do seu projeto Supabase para ativar o banco compartilhado entre você e a Lana.</div>
-    <div class="field"><label>Supabase URL</label><input type="text" id="sburl" placeholder="https://xxxxxxxxxxxx.supabase.co"></div>
-    <div class="field"><label>Supabase Anon Key</label><input type="text" id="sbkey" placeholder="eyJhbGci..."></div>
-    <div style="display:flex;gap:10px;align-items:center;margin-top:1rem;flex-wrap:wrap">
-      <button class="btn" onclick="salvarConfig()">Salvar e conectar</button>
-      <span id="cstat" style="font-size:13px;color:var(--text2)"></span>
+  <div class="phdr"><div><div class="ptitle">Configurações</div><div class="psub">Conecte o Supabase para salvar dados na nuvem</div></div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+    <div class="cfg-card">
+      <div class="cfg-title">Conexão Supabase</div>
+      <div class="cfg-sub">Cole as credenciais do seu projeto para ativar o banco de dados compartilhado entre você e a Lana.</div>
+      <div class="field"><label>Supabase URL</label><input type="text" id="sburl" placeholder="https://xxxxxxxxxxxx.supabase.co"></div>
+      <div class="field"><label>Supabase Anon Key</label><input type="text" id="sbkey" placeholder="eyJhbGci..."></div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:1rem;flex-wrap:wrap">
+        <button class="btn" onclick="salvarConfig()">Salvar e conectar</button>
+        <span id="cstat" style="font-size:13px;color:var(--tx2)"></span>
+      </div>
     </div>
-  </div>
-  <div class="cfg-card">
-    <div class="cfg-title">Status</div>
-    <div style="margin-top:6px;font-size:13px;color:var(--text2)"><span class="status-dot" id="sdot" style="background:#ccc"></span><span id="stxt">Não configurado</span></div>
-    <div class="divider"></div>
-    <div style="font-size:13px;color:var(--text2);line-height:1.8">
-      <strong style="color:var(--text);display:block;margin-bottom:4px">Como configurar:</strong>
-      1. Crie conta gratuita em <a href="https://supabase.com" target="_blank" style="color:var(--navy)">supabase.com</a><br>
-      2. Crie um projeto e vá em <strong style="color:var(--text)">Settings → API</strong><br>
-      3. Copie a <strong style="color:var(--text)">Project URL</strong> e a chave <strong style="color:var(--text)">anon public</strong><br>
-      4. Cole acima e clique em Salvar — a tabela é criada automaticamente
+    <div class="cfg-card">
+      <div class="cfg-title">Status</div>
+      <div style="margin-top:8px;font-size:14px;color:var(--tx2)"><span class="sdot" id="sdot" style="background:#ccc"></span><span id="stxt">Não configurado</span></div>
+      <div class="divider"></div>
+      <div style="font-size:13px;color:var(--tx2);line-height:1.9">
+        <strong style="color:var(--tx);display:block;margin-bottom:6px">Como configurar:</strong>
+        1. Crie conta gratuita em <a href="https://supabase.com" target="_blank" style="color:var(--navy);font-weight:500">supabase.com</a><br>
+        2. Crie um projeto e vá em <strong style="color:var(--tx)">Settings → API</strong><br>
+        3. Copie a <strong style="color:var(--tx)">Project URL</strong> e a chave <strong style="color:var(--tx)">anon public</strong><br>
+        4. Cole ao lado e clique em Salvar — pronto!
+      </div>
     </div>
   </div>
 </div>
 
-</main>
+</div><!-- /main -->
 
 <!-- MODAL -->
-<div class="modal-ov" id="modal">
+<div class="mov" id="modal">
   <div class="modal">
     <div class="modal-title">Novo lead</div>
     <div class="field"><label>Nome</label><input id="fnom" type="text" placeholder="Ex: Fernanda Lima"></div>
@@ -462,7 +462,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
     <div class="field"><label>Principal motivação</label><select id="fmot"><option>Não sabe o que postar</option><option>Quer escalar o faturamento</option><option>Conteúdo não converte</option><option>Não sabe se posicionar</option><option>Outro</option></select></div>
     <div class="field"><label>Valor (se fechado)</label><input id="fval" type="number" placeholder="0"></div>
-    <div class="modal-btns">
+    <div class="mbtns">
       <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
       <button class="btn" onclick="salvarLead()">Salvar lead</button>
     </div>
@@ -476,40 +476,28 @@ const META=100000;
 const COR_M={'Não sabe o que postar':'#185FA5','Quer escalar o faturamento':'#854F0B','Conteúdo não converte':'#534AB7','Não sabe se posicionar':'#993C1D','Outro':'#5F5E5A'};
 let sb=null,leads=[],filtro='todos',csvLeads=[],csvCols=[],csvMap={nome:'',faturamento:'',meta:'',produto:'',tempo:''},impRes=[],leadAnal=null;
 
-// ── SIDEBAR ──────────────────────────────────────────────
-function toggleSidebar(){
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('overlay').classList.toggle('open');
-}
+function toggleDrawer(){document.getElementById('drawer').classList.toggle('open')}
 
-// ── SUPABASE ─────────────────────────────────────────────
 function loadCfg(){
   const url=localStorage.getItem('sb_url'),key=localStorage.getItem('sb_key');
   if(url&&key){document.getElementById('sburl').value=url;document.getElementById('sbkey').value=key;initSB(url,key)}
-  else{setStatus(false,'Não configurado — vá em Configurações');fromLocal()}
+  else{setStatus(false,'Não configurado');fromLocal()}
 }
 function initSB(url,key){
   try{
     sb=window.supabase.createClient(url,key);
-    fetchLeads().then(()=>setStatus(true,'Conectado ao Supabase')).catch(()=>{setStatus(false,'Erro de conexão');fromLocal()});
+    fetchLeads().then(()=>setStatus(true,'Conectado')).catch(()=>{setStatus(false,'Erro de conexão');fromLocal()});
   }catch{setStatus(false,'Credenciais inválidas');fromLocal()}
 }
 async function fetchLeads(){
   const{data,error}=await sb.from('leads_ppv').select('*').order('criado_em',{ascending:false});
-  if(error)throw error;
-  leads=data||[];saveLocal();render();
+  if(error)throw error;leads=data||[];saveLocal();render();
 }
 async function insertLead(l){
-  if(!sb){leads.unshift({...l,id:Date.now().toString()});saveLocal();render();return}
+  if(!sb){leads.unshift({...l,id:Date.now().toString()});saveLocal();render();toast('Lead salvo localmente');return}
   const{data,error}=await sb.from('leads_ppv').insert([l]).select();
-  if(error){
-    if(error.code==='42P01'){await createTable();const{data:d2}=await sb.from('leads_ppv').insert([l]).select();leads.unshift(d2[0]);}
-    else{toast('Erro: '+error.message,'err');return}
-  }else{leads.unshift(data[0])}
-  saveLocal();render();toast('Lead salvo!');
-}
-async function createTable(){
-  await sb.rpc('exec',{sql:`CREATE TABLE IF NOT EXISTS leads_ppv(id uuid DEFAULT gen_random_uuid() PRIMARY KEY,nome text,faturamento text,origem text,etapa text DEFAULT 'novo',produto text DEFAULT 'nenhum',motivo text,valor numeric DEFAULT 0,criado_em timestamptz DEFAULT now());`}).catch(()=>{});
+  if(error){leads.unshift({...l,id:Date.now().toString()});saveLocal();render();toast('Salvo localmente (erro Supabase)');return}
+  leads.unshift(data[0]);saveLocal();render();toast('Lead salvo!');
 }
 async function deleteLead(id){
   if(!confirm('Remover este lead?'))return;
@@ -526,11 +514,10 @@ function salvarConfig(){
 }
 function setStatus(ok,msg){
   document.getElementById('sdot').style.background=ok?'#639922':'#E24B4A';
-  document.getElementById('stxt').textContent=msg;
-  document.getElementById('cstat').textContent=msg;
+  document.getElementById('stxt').textContent=ok?'Conectado ao Supabase ✓':msg;
+  document.getElementById('cstat').textContent=ok?'Conectado ✓':msg;
 }
 
-// ── RENDER ───────────────────────────────────────────────
 function fmt(v){return'R$ '+Math.round(v).toLocaleString('pt-BR')}
 function render(){
   const fech=leads.filter(l=>l.etapa==='fechado');
@@ -541,19 +528,22 @@ function render(){
   const pct=Math.min(100,Math.round(fat/META*100));
   const falta=META-fat;
   document.getElementById('nb').textContent=leads.length;
-  document.getElementById('vsub').textContent=`${leads.length} leads · ${fech.length} vendas fechadas`;
+  document.getElementById('tbfat').textContent=fmt(fat)+' faturado';
+  document.getElementById('vsub').textContent=`Método PPV · ${leads.length} leads · ${fech.length} vendas`;
   document.getElementById('lsub').textContent=`${leads.length} leads cadastrados`;
   document.getElementById('mval').textContent=fmt(fat);
   document.getElementById('mpct').textContent=pct+'%';
   document.getElementById('mfill').style.width=pct+'%';
+  document.getElementById('msub').textContent=fech.length+' vendas fechadas';
   document.getElementById('mrest').textContent=falta>0?`Faltam ${fmt(falta)} para a meta`:'🎉 Meta atingida!';
+  document.getElementById('mtv').textContent=tut.length+' vendas';
+  document.getElementById('mtf').textContent=fmt(tut.reduce((s,l)=>s+(+l.valor||0),0));
+  document.getElementById('mav').textContent=acel.length+' vendas';
+  document.getElementById('maf').textContent=fmt(acel.reduce((s,l)=>s+(+l.valor||0),0));
   document.getElementById('kfat').textContent=fmt(fat);
   document.getElementById('kvend').textContent=fech.length;
   document.getElementById('ktick').textContent=fmt(tick);
-  document.getElementById('ktv').textContent=tut.length+' vendas';
-  document.getElementById('ktf').textContent=fmt(tut.reduce((s,l)=>s+(+l.valor||0),0));
-  document.getElementById('kav').textContent=acel.length+' vendas';
-  document.getElementById('kaf').textContent=fmt(acel.reduce((s,l)=>s+(+l.valor||0),0));
+  document.getElementById('ktleads').textContent=leads.length;
   [['novo','pcn','pvn'],['qualificado','pcq','pvq'],['aplicou','pca','pva'],['negociacao','pcng','pvng'],['fechado','pcf','pvf']].forEach(([e,cn,vn])=>{
     const ls=leads.filter(l=>l.etapa===e);
     document.getElementById(cn).textContent=ls.length;
@@ -589,29 +579,19 @@ function renderLeads(){
     const eC=`e-${l.etapa||'novo'}`;
     const eL={novo:'Novo',qualificado:'Qualificado',aplicou:'Aplicou',negociacao:'Negociação',fechado:'Fechado'}[l.etapa]||l.etapa;
     const mc=COR_M[l.motivo]||'#888';
-    return`<div class="t-row">
-      <div style="display:flex;align-items:center"><div class="lead-av ${avC}">${ini}</div><div><div class="lead-name">${l.nome}</div><div class="lead-sub">${l.faturamento||'—'}</div></div></div>
-      <div><span class="pill ${pC}">${pL}</span></div>
-      <div><span class="ep ${eC}">${eL}</span></div>
-      <div>${l.motivo?`<span class="mchip" style="background:${mc}18;color:${mc};border:0.5px solid ${mc}50">${l.motivo}</span>`:'<span style="color:var(--text3);font-size:12px">—</span>'}</div>
-      <div style="font-size:12px;color:var(--text2)">${l.origem||'—'}</div>
-      <div><button class="btn-icon" onclick="deleteLead('${l.id}')">✕</button></div>
-    </div>`;
+    return`<div class="t-row"><div style="display:flex;align-items:center"><div class="lav ${avC}">${ini}</div><div><div class="lname">${l.nome}</div><div class="lsub">${l.faturamento||'—'}</div></div></div><div><span class="pill ${pC}">${pL}</span></div><div><span class="ep ${eC}">${eL}</span></div><div>${l.motivo?`<span class="mchip" style="background:${mc}18;color:${mc};border:0.5px solid ${mc}50">${l.motivo}</span>`:'<span style="color:var(--tx3);font-size:12px">—</span>'}</div><div style="font-size:12px;color:var(--tx2)">${l.origem||'—'}</div><div><button class="delbtn" onclick="deleteLead('${l.id}')">✕</button></div></div>`;
   }).join('');
 }
 
 function setFiltro(t,el){filtro=t;document.querySelectorAll('.filt').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderLeads()}
 
-// ── NAV ──────────────────────────────────────────────────
 function goPage(id,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tnav').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
-  el.classList.add('active');
-  if(window.innerWidth<=900){toggleSidebar()}
+  document.querySelectorAll('.tnav').forEach(b=>{if(b.textContent.trim().startsWith({visao:'Visão',leads:'Leads',importar:'Import',analisar:'Analis',config:'Config'}[id]))b.classList.add('active')});
 }
 
-// ── MODAL ─────────────────────────────────────────────────
 function abrirModal(){document.getElementById('modal').classList.add('open')}
 function fecharModal(){document.getElementById('modal').classList.remove('open')}
 document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModal()});
@@ -623,7 +603,6 @@ async function salvarLead(){
   await insertLead(l);
 }
 
-// ── CSV ───────────────────────────────────────────────────
 function parseCSV(txt){
   const lines=txt.trim().split(/\r?\n/);if(lines.length<2)return[];
   const headers=lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim());csvCols=headers;
@@ -631,20 +610,20 @@ function parseCSV(txt){
 }
 function autoMap(hs){const l=hs.map(h=>h.toLowerCase());const f=ts=>hs[l.findIndex(h=>ts.some(t=>h.includes(t)))]||'';csvMap.nome=f(['nome','name']);csvMap.faturamento=f(['fatura','renda','receita']);csvMap.meta=f(['meta','quer faturar','objetivo']);csvMap.produto=f(['produto','vende','serviço']);csvMap.tempo=f(['tempo','criando','conteúdo'])}
 function renderMapFields(){
-  const C=[{k:'nome',l:'Nome'},{k:'faturamento',l:'Faturamento atual'},{k:'meta',l:'Quanto quer faturar'},{k:'produto',l:'Já vende/tem produto'},{k:'tempo',l:'Tempo criando conteúdo'}];
-  document.getElementById('cmapfields').innerHTML=C.map(c=>`<div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">${c.l}</div><select id="cm-${c.k}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif"><option value="">— ignorar —</option>${csvCols.map(col=>`<option value="${col}" ${csvMap[c.k]===col?'selected':''}>${col}</option>`).join('')}</select></div>`).join('');
+  const C=[{k:'nome',l:'Nome'},{k:'faturamento',l:'Faturamento'},{k:'meta',l:'Meta'},{k:'produto',l:'Já vende'},{k:'tempo',l:'Tempo conteúdo'}];
+  document.getElementById('cmapfields').innerHTML=C.map(c=>`<div><div style="font-size:11px;color:var(--tx2);margin-bottom:4px">${c.l}</div><select id="cm-${c.k}" style="width:100%;padding:7px 10px;border:1px solid var(--bdr);border-radius:8px;font-size:12px;background:var(--surf2);color:var(--tx);font-family:'DM Sans',sans-serif"><option value="">— ignorar —</option>${csvCols.map(col=>`<option value="${col}" ${csvMap[c.k]===col?'selected':''}>${col}</option>`).join('')}</select></div>`).join('');
 }
 function getLeadCSV(row){const g=k=>{const c=document.getElementById('cm-'+k)?.value||csvMap[k];return c?(row[c]||''):''};return{nome:g('nome')||'Lead sem nome',faturamento:g('faturamento'),meta:g('meta'),produto:g('produto'),tempo:g('tempo')}}
 function handleDrop(e){e.preventDefault();document.getElementById('uarea').classList.remove('drag');const f=e.dataTransfer.files[0];if(f)processFile(f)}
 function handleFile(e){if(e.target.files[0])processFile(e.target.files[0])}
 function processFile(file){
   const r=new FileReader();
-  r.onload=e=>{csvLeads=parseCSV(e.target.result);if(!csvLeads.length){toast('CSV vazio ou inválido','err');return}autoMap(csvCols);renderMapFields();document.getElementById('cmap').style.display='block';document.getElementById('finfo').innerHTML=`<div class="file-box"><span style="font-size:18px">📄</span><div style="flex:1;font-size:13px;font-weight:500">${file.name}</div><div style="font-size:12px;color:var(--text2)">${csvLeads.length} respostas</div></div>`;document.getElementById('bproc').style.display='inline-flex'};
+  r.onload=e=>{csvLeads=parseCSV(e.target.result);if(!csvLeads.length){toast('CSV vazio ou inválido','err');return}autoMap(csvCols);renderMapFields();document.getElementById('cmap').style.display='block';document.getElementById('finfo').innerHTML=`<div class="fbox"><span style="font-size:18px">📄</span><div style="flex:1;font-size:13px;font-weight:500">${file.name}</div><div style="font-size:12px;color:var(--tx2)">${csvLeads.length} respostas</div></div>`;document.getElementById('bproc').style.display='inline-flex'};
   r.readAsText(file,'UTF-8');
 }
 function carregarDemo(){
   const demo=`nome,faturamento_atual,meta_faturamento,tem_produto,tempo_conteudo\nFernanda Lima,R$3500,R$15000,Sim nutricionista online,1 ano\nCarla Mendes,R$0,R$5000,Não ainda,2 meses\nJuliana Torres,R$8000,R$25000,Sim mentora de carreira,2 anos\nBianca Rocha,R$500,R$3000,Sim artesanato,6 meses\nRaquel Nunes,R$12000,R$40000,Sim coach executiva,3 anos`;
-  csvLeads=parseCSV(demo);autoMap(csvCols);renderMapFields();document.getElementById('cmap').style.display='block';document.getElementById('finfo').innerHTML=`<div class="file-box"><span style="font-size:18px">🎯</span><div style="flex:1;font-size:13px;font-weight:500">dados-exemplo.csv</div><div style="font-size:12px;color:var(--text2)">${csvLeads.length} respostas</div></div>`;document.getElementById('bproc').style.display='inline-flex';
+  csvLeads=parseCSV(demo);autoMap(csvCols);renderMapFields();document.getElementById('cmap').style.display='block';document.getElementById('finfo').innerHTML=`<div class="fbox"><span style="font-size:18px">🎯</span><div style="flex:1;font-size:13px;font-weight:500">dados-exemplo.csv</div><div style="font-size:12px;color:var(--tx2)">${csvLeads.length} respostas</div></div>`;document.getElementById('bproc').style.display='inline-flex';
 }
 async function qualUm(lead){
   const p=`Você é consultora de vendas da Manoela Flores, Método PPV.\nTUTORIA HANDS-ON: já fatura algo, tem produto definido, quer atenção individual.\nACELERADORA PPV: fatura R$1k-R$10k/mês, busca método e comunidade.\n\nLEAD:\nNome: ${lead.nome}\nFaturamento: ${lead.faturamento||'não informado'}\nMeta: ${lead.meta||'não informado'}\nJá vende: ${lead.produto||'não informado'}\nTempo conteúdo: ${lead.tempo||'não informado'}\n\nResponda APENAS JSON sem markdown:\n{"score_tutoria":0-100,"score_aceleradora":0-100,"recomendacao":"tutoria"ou"aceleradora"ou"nenhum","motivo":"1 frase","motivacao_lead":"Não sabe o que postar"ou"Quer escalar o faturamento"ou"Conteúdo não converte"ou"Não sabe se posicionar"ou"Outro"}`;
@@ -665,20 +644,19 @@ async function processarCSV(){
   document.getElementById('progbar').style.width='100%';document.getElementById('proglbl').textContent=`Concluído — ${csvLeads.length} leads qualificados`;
   const t=impRes.filter(r=>r.recomendacao==='tutoria').length,a=impRes.filter(r=>r.recomendacao==='aceleradora').length;
   document.getElementById('itotal').textContent=impRes.length;document.getElementById('itut').textContent=t;document.getElementById('iacel').textContent=a;
-  document.getElementById('imptbody').innerHTML=impRes.map(r=>{const pC=r.recomendacao==='tutoria'?'pill-t':r.recomendacao==='aceleradora'?'pill-a':'pill-n';const pL=r.recomendacao==='tutoria'?'Tutoria':r.recomendacao==='aceleradora'?'Aceleradora':'—';return`<tr><td style="font-weight:500">${r.nome}</td><td style="color:var(--text2)">${r.faturamento||'—'}</td><td><span class="pill ${pC}">${pL}</span></td><td style="font-size:11px;color:var(--text2)"><span style="color:var(--navy);font-weight:500">T ${r.score_tutoria}%</span> · <span style="color:var(--gold-dim);font-weight:500">A ${r.score_aceleradora}%</span></td><td style="font-size:12px;color:var(--text2)">${r.motivo||'—'}</td></tr>`}).join('');
+  document.getElementById('imptbody').innerHTML=impRes.map(r=>{const pC=r.recomendacao==='tutoria'?'pill-t':r.recomendacao==='aceleradora'?'pill-a':'pill-n';const pL=r.recomendacao==='tutoria'?'Tutoria':r.recomendacao==='aceleradora'?'Aceleradora':'—';return`<tr><td style="font-weight:500">${r.nome}</td><td style="color:var(--tx2)">${r.faturamento||'—'}</td><td><span class="pill ${pC}">${pL}</span></td><td style="font-size:11px;color:var(--tx2)"><span style="color:var(--navy);font-weight:500">T ${r.score_tutoria}%</span> · <span style="color:var(--gold2);font-weight:500">A ${r.score_aceleradora}%</span></td><td style="font-size:12px;color:var(--tx2)">${r.motivo||'—'}</td></tr>`}).join('');
   document.getElementById('impres').style.display='block';btn.disabled=false;btn.innerHTML='Qualificar com IA';
 }
 async function adicionarTodos(){
   for(const r of impRes)await insertLead({nome:r.nome,faturamento:r.faturamento||'—',origem:'Respondi',etapa:'novo',produto:r.recomendacao,motivo:r.motivacao_lead||'Outro',valor:0});
-  toast(`${impRes.length} leads adicionados!`);goPage('leads',document.querySelectorAll('.nav-btn')[1]);
+  toast(`${impRes.length} leads adicionados!`);goPage('leads',null);
 }
 
-// ── ANALISAR ─────────────────────────────────────────────
 function preencherEx(){document.getElementById('anom').value='Fernanda Lima';document.getElementById('aresp').value='Faturamento atual: R$3.500/mês\nQuanto quer faturar: R$15.000/mês\nJá vende / tem produto: Sim, sou nutricionista e atendo online\nTempo criando conteúdo: 1 ano'}
 async function analisarLead(){
   const resp=document.getElementById('aresp').value.trim();if(!resp){toast('Cole as respostas','err');return}
   const btn=document.getElementById('banalise');btn.disabled=true;btn.innerHTML='<span class="ldots"><span></span><span></span><span></span></span>';
-  document.getElementById('ares').style.display='none';
+  document.getElementById('ares').style.display='none';document.getElementById('ares-empty').style.display='flex';
   const prompt=`Você é consultora de vendas da Manoela Flores, Método PPV.\nTUTORIA HANDS-ON: já fatura algo, tem produto definido, quer atenção individual.\nACELERADORA PPV: fatura R$1k-R$10k/mês, busca método e comunidade.\n\nRESPOSTAS:\n${resp}\n\nResponda APENAS JSON sem markdown:\n{"score_tutoria":0-100,"score_aceleradora":0-100,"recomendacao":"tutoria"ou"aceleradora"ou"nenhum","titulo":"frase curta","motivo":"1 frase","pontos_positivos":["...","..."],"pontos_atencao":["..."],"abordagem":"mensagem sugerida","motivacao_lead":"Não sabe o que postar"ou"Quer escalar o faturamento"ou"Conteúdo não converte"ou"Não sabe se posicionar"ou"Outro"}`;
   try{
     const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:600,messages:[{role:"user",content:prompt}]})});
@@ -688,22 +666,20 @@ async function analisarLead(){
     setTimeout(()=>{document.getElementById('sbt').style.width=r.score_tutoria+'%';document.getElementById('sba').style.width=r.score_aceleradora+'%'},100);
     const rC=r.recomendacao==='tutoria'?'rec-t':r.recomendacao==='aceleradora'?'rec-a':'rec-n';
     const rL=r.recomendacao==='tutoria'?'Tutoria Hands-On':r.recomendacao==='aceleradora'?'Aceleradora PPV':'Não qualificado agora';
-    const rTC=r.recomendacao==='tutoria'?'color:var(--navy)':r.recomendacao==='aceleradora'?'color:var(--gold-dim)':'color:var(--text2)';
+    const rTC=r.recomendacao==='tutoria'?'color:var(--navy)':r.recomendacao==='aceleradora'?'color:var(--gold2)':'color:var(--tx2)';
     document.getElementById('recbox').innerHTML=`<div class="rec-box ${rC}"><div class="rec-tag" style="${rTC}">${rL}</div><div class="rec-title">${r.titulo}</div><div class="rec-reason">${r.motivo}</div></div>`;
     document.getElementById('pontos').innerHTML=[...(r.pontos_positivos||[]).map(p=>`<div style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><div style="width:6px;height:6px;border-radius:50%;background:var(--green);margin-top:5px;flex-shrink:0"></div><span>${p}</span></div>`),(r.pontos_atencao||[]).map(p=>`<div style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><div style="width:6px;height:6px;border-radius:50%;background:var(--amber);margin-top:5px;flex-shrink:0"></div><span>${p}</span></div>`)].flat().join('');
     document.getElementById('abordtxt').textContent=r.abordagem;
-    document.getElementById('ares').style.display='block';
+    document.getElementById('ares-empty').style.display='none';document.getElementById('ares').style.display='block';
   }catch{toast('Erro ao analisar.','err')}
   btn.disabled=false;btn.innerHTML='Analisar com IA';
 }
-async function addLeadAnalisado(){if(!leadAnal)return;await insertLead(leadAnal);toast('Lead adicionado!');goPage('leads',document.querySelectorAll('.nav-btn')[1])}
+async function addLeadAnalisado(){if(!leadAnal)return;await insertLead(leadAnal);toast('Lead adicionado!');goPage('leads',null)}
 
-// ── TOAST ─────────────────────────────────────────────────
 function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(type==='err'?' err':'');setTimeout(()=>t.classList.remove('show'),3000)}
 
-// ── INIT ──────────────────────────────────────────────────
 loadCfg();
-setTimeout(()=>{const fat=leads.filter(l=>l.etapa==='fechado').reduce((s,l)=>s+(+l.valor||0),0);document.getElementById('mfill').style.width=Math.min(100,Math.round(fat/META*100))+'%'},300);
+setTimeout(()=>{const fat=leads.filter(l=>l.etapa==='fechado').reduce((s,l)=>s+(+l.valor||0),0);const el=document.getElementById('mfill');if(el)el.style.width=Math.min(100,Math.round(fat/META*100))+'%'},400);
 </script>
 </body>
 </html>
